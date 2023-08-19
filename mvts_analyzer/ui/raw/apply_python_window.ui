@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ApplyPythonWindow</class>
+ <widget class="QMainWindow" name="ApplyPythonWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1065</width>
+    <height>788</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Apply Python Code</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>:/Icons/icons/mainwin.ico</normaloff>:/Icons/icons/mainwin.ico</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="sizeIncrement">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="font">
+       <font>
+        <italic>true</italic>
+       </font>
+      </property>
+      <property name="text">
+       <string>Note: the dataframe is accesible in this window via the &quot;model&quot; variable (.e.g. model.df, or model.selection)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <item>
+       <widget class="QTextEdit" name="pythonCodeTextEdit"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Expanding</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>278</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="ExecuteButton">
+          <property name="locale">
+           <locale language="English" country="Netherlands"/>
+          </property>
+          <property name="text">
+           <string>Execute</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="ExecuteAndUpdateButton">
+          <property name="text">
+           <string>Execute + Update</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="CancelButton">
+          <property name="text">
+           <string>Cancel</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1065</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionSave"/>
+    <addaction name="actionSaveAs"/>
+    <addaction name="actionOpenFromFile"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSaveAs">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Tango Icons/actions/document-save-as.png</normaloff>:/Icons/icons/Tango Icons/actions/document-save-as.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save as...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionOpenFromFile">
+   <property name="text">
+    <string>Open...</string>
+   </property>
+   <property name="toolTip">
+    <string>Open from file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Tango Icons/actions/document-save.png</normaloff>:/Icons/icons/Tango Icons/actions/document-save.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionactionExecutePythonCode">
+   <property name="text">
+    <string>actionExecutePythonCode</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../../res/app_resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>
