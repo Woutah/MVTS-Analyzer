@@ -4,28 +4,28 @@ The main entry point - we launch the app from here (optionally with arguments)
 
 import logging
 
-# from mvts_analyzer.utility.
-log = logging.getLogger(__name__)
 import argparse
+import sys
 
 import matplotlib.pyplot as plt
 from PySide6 import QtGui, QtWidgets
 from res.Paths import Paths
-from mvts_analyzer.windows.main_window import MainWindow
 
-if __name__ == "__main__":
-	import sys
+from mvts_analyzer.windows.main_window import MainWindow
+log = logging.getLogger(__name__)
+
+
+def main(debug_level=logging.INFO):
+	"""The main function, starts the app and parses arguments
+	"""
 	print("Started main function")
 	plt.ioff() #Dont just spit out plots/turn off interactive plotting, but keep them in memory TODO: Note that it is possible that this will break some things?? 
-
-	# logging.basicConfig(format='[%(asctime)s %(pathname)s:%(lineno)d] %(levelname)s - %(message)s'
-	# 				, level=logging.DEBUG) #With time
 	formatter = logging.Formatter("[{pathname:>90s}:{lineno:<4}]  {levelname:<7s}   {message}", style='{')
 	handler = logging.StreamHandler()
 	handler.setFormatter(formatter)
 	logging.basicConfig(
 		handlers=[handler],
-		level=logging.DEBUG) #Without time
+		level=debug_level)
 	logging.getLogger('matplotlib').setLevel(logging.INFO)
 	logging.getLogger('fontmanager').setLevel(logging.INFO)
 	logging.getLogger('asyncua').setLevel(logging.WARN)
@@ -34,20 +34,20 @@ if __name__ == "__main__":
 	logging.getLogger('apscheduler').setLevel(logging.ERROR)
 
 	parser = argparse.ArgumentParser(description='Tool arguments')
-	parser.add_argument("--df_path", 
-						help="path to initial plot dataframe (.pkl file)",
+	parser.add_argument("-f", "--file", 
+						help="Path to initially loaded data (.xlsx/.csv or pickled pd.dataframe)",
 						default=None
 					)
 
 	#Argument for dark mode store true
-	parser.add_argument("--dark_mode", 
-						help="Turn on dark mode",
+	parser.add_argument("-d", "--dark_mode",
+						help="Turn on dark mode for the app.",
 						action="store_true",
 						default=False
 					)
 
-	parser.add_argument("--launch_on_monitor",
-						help="Launch on monitor with given index",
+	parser.add_argument("-m", "--use_monitor",
+						help="Launch on monitor with given index (default is primary monitor).",
 						default=None,
 						type=int
 					)
@@ -60,11 +60,8 @@ if __name__ == "__main__":
 		app.setStyleSheet(open(Paths.DarkStyleSheetFilePath).read())
 		plt.style.use('dark_background')
 
-	opc_manager = None
-	# with OPCManager as opc_manager:	
-	# w = LiveViewWindow()
-	w = MainWindow(graph_model_args={"df_path": args.df_path})
-	if args.launch_on_monitor:
+	w = MainWindow(graph_model_args={"df_path": args.file})
+	if args.use_monitor:
 		#Launch on monitor with given index
 		monitor = app.screens()[args.launch_on_monitor].geometry()
 	else: #Otherwise launch on primary monitor
@@ -74,7 +71,8 @@ if __name__ == "__main__":
 	w.move(monitor.left(), monitor.top())
 	w.show()
 	app.exec_()
+	log.info("End of main reached... Exiting...")
 
 
-	log.info("Reached end of main, exiting...")
-	print("Done!")
+if __name__ == "__main__":
+	main(logging.DEBUG)

@@ -41,10 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.graph_view_windows = []
 
-		self.plot_widget = QtWidgets.QWidget( #the main plot tab
-			# self.main_tab_widget,
-			objectName="plot_widget"
-		)
+		self.plot_widget = QtWidgets.QWidget() #the main plot tab
 		self.graph_data_model = GraphData(**graph_model_args)
 		self.graph_settings_model = GraphSettingsModel() #Create model
 		self.plotter = QPlotter(self.graph_data_model, self.graph_settings_model)

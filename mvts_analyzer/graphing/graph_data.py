@@ -132,8 +132,10 @@ class GraphData(QtCore.QObject):
 
 	@property
 	def df_selection(self):
-		"""Returns the current dataframe selection"""
-		return self._df_selection
+		"""
+		Returns the current dataframe selection as a list(! not a set!) of indexes
+		"""
+		return list(self._df_selection)
 
 	@df_selection.setter
 	def df_selection(self, new_selection : set):
@@ -483,7 +485,7 @@ class GraphData(QtCore.QObject):
 			self._df = new_df
 
 			log.info(f"Succesfully (re)loaded database from file - df size: {len(new_df)}, columns: {new_df.columns}")
-			self.df_selection = set([]) #Reset selection
+			self._df_selection = set([]) #Reset selection
 			self._file_source = file_source
 			self.fileSourceChanged.emit(self.file_source)
 			# self.df_selection = np.array([i for i in range(int(len(new_df) * 0.5))])

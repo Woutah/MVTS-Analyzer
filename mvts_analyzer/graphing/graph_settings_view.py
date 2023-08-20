@@ -43,7 +43,7 @@ class PlotSettingsInnerView(QtWidgets.QTreeWidget):
 	# fileSourceChanged = QtCore.Signal(str)
 	fontSizeChanged = QtCore.Signal(object)
 	viewDomainSliderChanged = QtCore.Signal(object)
-	viewDomainBoxesChanged = QtCore.Signal([str, str])
+	viewDomainBoxesChanged = QtCore.Signal(object) #[str, str]
 
 	xAxisChanged = QtCore.Signal(str)
 	plotTypeChanged = QtCore.Signal(str)

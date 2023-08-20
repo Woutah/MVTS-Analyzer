@@ -14,8 +14,8 @@
    <string>Apply Python Code</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/Icons/icons/Custom Icons/execute_python.svg</normaloff>:/Icons/icons/Custom Icons/execute_python.svg</iconset>
+   <iconset resource="../../res/app_resources.qrc">
+    <normaloff>:/Icons/icons/Other Icons/python-logo-only.svg</normaloff>:/Icons/icons/Other Icons/python-logo-only.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="enabled">
@@ -42,7 +42,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Note: the main dataframe is accesible in this window via &quot;model&quot; using either model.df (and optionally model.selection)</string>
+       <string>Note: the main dataframe is accesible in this window using self.df (and optionally self.df_selection)</string>
       </property>
      </widget>
     </item>
