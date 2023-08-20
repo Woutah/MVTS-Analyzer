@@ -103,13 +103,7 @@ class CollectionSelector(QtWidgets.QWidget):  #Inspired from : https://matplotli
 		self._selection_locs_set = None
 
 		self._xys = xys
-		# Ensure that we have separate colors for each object
-		# if len(Xs) > 0:
 
-		# 	self._xys = np.concatenate((Xs, Ys), axis=1)
-		# else:
-		# 	self._xys = []
-		# print("Kaass")
 
 	def on_select_rect(self,
 				eclick : matplotlib.backend_bases.MouseEvent,

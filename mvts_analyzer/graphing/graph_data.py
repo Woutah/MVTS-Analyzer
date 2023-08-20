@@ -174,7 +174,7 @@ class GraphData(QtCore.QObject):
 			log.debug(f"Settings GraphData selection in mode {mode} - filling gaps of size (ms): {fill_gaps_ms}")
 			time_selection = self._df[[self._dt_col]].copy()
 			time_selection["mask"] = False
-			time_selection.loc[new_selection, "mask"] = True #type: ignore
+			time_selection.loc[list(new_selection), "mask"] = True
 			time_selection["indx"] = self._df.index
 			time_selection.index = time_selection[self._dt_col] #type:ignore
 
@@ -259,7 +259,7 @@ class GraphData(QtCore.QObject):
 		return self._df
 
 
-	def get_col_limrange(self, col : str):
+	def get_col_limrange(self, col : str | None):
 		"""Get the limrange for a column (min/max), pd.Timestamp columns arre converted to pydatetimes
 
 		Args:
@@ -268,16 +268,9 @@ class GraphData(QtCore.QObject):
 		Returns:
 			LimitedRange: datastructure which contains min/max values
 		"""
-		if self._df is not None and col in self._df: #TODO: datetime separately?
-
-			# maxval1 = self._df.max(axis=0)[col] # column AAL's max
-			# minval1 = self._df.min(axis=0)[col] # column AAL's min
-
+		if self._df is not None and col is not None and col in self._df: #TODO: datetime separately?
 			maxval = self._df[col].max(axis=0) # column AAL's max
 			minval = self._df[col].min(axis=0) # column AAL's min
-
-			# log.debug(f"Kaas: {maxval1} -> {maxval}, {minval1} -> {minval}")
-
 			if isinstance(maxval, pd.Timestamp):
 				log.debug("Maxval was timestamp, converting to datetime")
 				maxval = maxval.to_pydatetime(maxval) #type: ignore
@@ -311,7 +304,7 @@ class GraphData(QtCore.QObject):
 			raise ValueError("No dataframe loaded, cannot set labels")
 
 		if column is not None and len(column) > 0 and self._df_selection is not None:
-			selection = self.df_selection
+			selection = list(self.df_selection)
 			self._df.loc[selection, column] = label #type: ignore
 			log.debug(f"Columns are now: {self._df.columns}")
 			self.dfChanged.emit()
@@ -458,20 +451,9 @@ class GraphData(QtCore.QObject):
 			log.debug("Now attempting to validate/fix pandas dataframe")
 			#Unfixable errors:
 			assert isinstance(new_df, pd.DataFrame) #Assert the loaded file
-
 			if inplace_try_fix:
 				log.debug("Inplace_try_fix enabled in validate_df, but not implemented yet...")
-
-			#TODO: although datetime index is easy, this means all data that is loaded should always contain a datetime
-			# 	column, which is quite restrictive for other types of data --> maybe don't do this?
-			assert(self._dt_col in new_df.columns), "A datetime column should be present (TODO: make optional)"
-			# #Fixable errors: (if inplace_fix is set to true)
-			# if new_df.index.name != self._dt_col: #
-			# 	if inplace_try_fix:
-			# 		new_df.set_index(self._dt_col, inplace=True, drop=False)
-			# 	else:
-			# 		raise ValueError(
-			# 			"Index is not of datetime format - and could not fix (inplace_try_fix = False)... Returning...")
+			# assert(self._dt_col in new_df.columns), "A datetime column should be present (TODO: make optional)"
 		except Exception as err: #pylint: disable=broad-exception-caught
 			log.error(f"Could not validate/fix dataframe : {err}")
 			return False

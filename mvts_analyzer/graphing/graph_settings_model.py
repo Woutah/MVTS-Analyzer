@@ -12,9 +12,6 @@ import matplotlib
 import matplotlib.pyplot
 from PySide6 import QtCore
 
-log = logging.getLogger(__name__)
-import typing
-
 import datetime
 
 from mvts_analyzer.widgets.datastructures import LimitedRange, LimitedValue
@@ -22,10 +19,14 @@ from mvts_analyzer.widgets.datastructures import LimitedRange, LimitedValue
 
 log = logging.getLogger(__name__)
 matplotlib.use('Qt5Agg')
-
+#pylint: disable=missing-function-docstring
 
 
 class GraphSettingsModelData():
+	"""
+	Contains the plot-settings-data (which is not saved to file) e.g. what columns to plot, what color to plot
+	them in, etc.
+	"""
 	def __init__(self) -> None:
 		super().__init__()  #TODO: Not sure why but this is needed when inheriting in inheriting from both this and QObject
 		log.debug("Initializing plotsettings")
@@ -35,12 +36,12 @@ class GraphSettingsModelData():
 		self._fft_transparency : float = 1.0
 		self._fft_toggle : bool = False
 		self.fft_brightness_limval : LimitedValue = LimitedValue(0.0, 1.0, 0.5)
-		# self.fft_brightness_limval.changed.connect(self.changed) #Connect changes 
+		# self.fft_brightness_limval.changed.connect(self.changed) #Connect changes
 
 		self.fft_quality_limval : LimitedValue = LimitedValue(0.1, 1.0, 1.0)
 
 
-		self._fft_color_map= matplotlib.pyplot.colormaps()[0]
+		self._fft_color_map= matplotlib.pyplot.colormaps()[0] #type: ignore #NOTE: submodule not picked up by vscode?
 		# self._fft_color_map_options = matplotlib.pyplot.colormaps()
 		self._fft_color_map_options = [ "viridis", "BlueYellowRed", "inferno", "magma", "plasma", "cividis", "gnuplot"]
 
@@ -49,40 +50,39 @@ class GraphSettingsModelData():
 			None,
 			None,
 			None,
-			None								
+			None
 		)
 
 		self._labeler_toggle = False
-		
+
 		self._normalization_toggle = False
 		self._font_size_limval : LimitedValue = LimitedValue( 4, 30, 10) #Font sizes for plotting
 
 		# self.plot_domain_limrange = LimitedRange(0, 10, 0, 10)
 		self._plot_domain_limrange : LimitedRange = LimitedRange(
-										datetime.datetime(2020, 1, 1, 1, 0, 0), 
+										datetime.datetime(2020, 1, 1, 1, 0, 0),
 										datetime.datetime(2021, 1, 1, 1, 0, 0),
 										datetime.datetime(2020, 1, 1, 1, 0, 0),
-										datetime.datetime(2021, 1, 1, 1, 0, 0),										
+										datetime.datetime(2021, 1, 1, 1, 0, 0),
 									)
 
-									
+
 
 		self._plot_list : typing.List[str] = []
 		self.plot_list_default : typing.List[str]= ["Depth(m)"]
 
 		self._plotted_labels_list = []
-		# self._file_source = None
 
 		self._x_axis : str = "DateTime"
 		self._plot_type : str = "Line"
 		self._default_x_axis : str = "DateTime"
-		self._plot_font_size : int = 10  #TODO:
+		self._plot_font_size : int = 10 
 
-		self.label_column_presets : str = []
+		self.label_column_presets : list[str] = []
 		self.label_column_options_presets : typing.Dict[str, typing.List[str]] = {}
 
 
-		self.default_all_column_sorting : typing.List[str] = [ #For dropdown menu 
+		self.default_all_column_sorting : typing.List[str] = [ #For dropdown menu
 			'DateTime'
 		]
 
@@ -92,7 +92,7 @@ class GraphSettingsModelData():
 		self._plot_color_column : str = ""
 
 		self.plot_filters= []
-		# self._selectionGapFillMs = 0 #When selecting data, how many millisecond gaps should also be selected (e.g. t=1, t=3, then if GapFillMs=1000, t=2 would also be selected) 
+		# self._selectionGapFillMs = 0 #When selecting data, how many millisecond gaps should also be selected (e.g. t=1, t=3, then if GapFillMs=1000, t=2 would also be selected)
 
 		self._selection_gap_fill_ms_limval : LimitedValue = LimitedValue( 0, 10000, 0) #Font sizes for plotting
 
@@ -100,11 +100,12 @@ class GraphSettingsModelData():
 		self.copy_attrs(GraphSettingsModelData())
 
 	@staticmethod
-	def column_sorter(comp : tuple, default_sorting : typing.Iterable):
-		"""A sorter which can be passed to the sorted() method (e.g. sorted(alist, key=lambda x: column_sorter(x, default_sorting)))
-			Sorts first by [default_sorting]. then alphabetically. 
+	def column_sorter(comp : tuple, default_sorting : list):
+		"""A sorter which can be passed to the sorted() method (e.g. 
+			sorted(alist, key=lambda x: column_sorter(x, default_sorting)))
+			Sorts first by [default_sorting]. then alphabetically.
 
-			E.g: 
+			E.g:
 			default_sorting = [b, c, d]
 			sorted([b, a, c], key=lambda x: column_sorter(x, default_sorting))
 
@@ -113,29 +114,34 @@ class GraphSettingsModelData():
 
 		Args:
 			curcol (str): The current column for which a sorting-score should be calculated
-			default_sorting (typing.Iterable): The default sorting 
+			default_sorting (typing.Iterable): The default sorting
 		"""
-		# if default_sorting.find(curcol) == -1:
-		# 	return 0
-		try: 
-			a = default_sorting.index(comp)
-		except ValueError:
-			a = 100000
 
-		return (a, comp)
+		try:
+			sort_val = default_sorting.index(comp)
+		except ValueError:
+			sort_val = 100000
+
+		return (sort_val, comp)
 
 		# if a == b: #If both not in default_sorting
 		# 	return comp[1] < comp[2]
 
 
 	def copy_attrs(self, data : GraphSettingsModelData):
+		"""Copy all attributes from data to self"""
 		self.__dict__.update(data.__dict__)
 
 
-class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The order of inheritance is important here -> In pyqt5 the order is different than pyside6
-# class GraphSettingsModel(object):
+class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): 
+	#Note: The order of inheritance is important here -> In pyqt5 the order is different than pyside6
+	"""
+	Qt-Wrapper around GraphSettingsModelData that emits signals when data changes
+	"""
+
+
 	changed = QtCore.Signal(object)
-	dfColumnsChanged = QtCore.Signal(object) #When columns change 
+	dfColumnsChanged = QtCore.Signal(object) #When columns change
 
 	fftColumnChanged = QtCore.Signal(object)
 	fftToggleChanged = QtCore.Signal(object)
@@ -162,13 +168,10 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 	plotColorMethodChanged = QtCore.Signal(str, str) #Type ("Based On Column" / "Based On Labels") + Label column ("" if based on column)
 
 	selectionGapFillMsChanged = QtCore.Signal(int)
-	
 
-	def __init__(self):
-		super().__init__()
-		# super(QtCore.QObject, self).__init__()
-		# super(GraphSettingsModelData, self).__init__()
 
+	# def __init__(self):
+	# 	super().__init__()
 
 	@property
 	def plot_color_method(self) -> str:
@@ -207,12 +210,12 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self.fftToggleChanged.emit(self._fft_toggle)
 
 
-	@property 
-	def fft_column(self) -> str:
+	@property
+	def fft_column(self) -> str | None:
 		return self._fft_column
 
 	@fft_column.setter
-	def fft_column(self, new_col : str):
+	def fft_column(self, new_col : str | None):
 		if new_col != self._fft_column:
 			log.debug(f"FFT column now {new_col}")
 			# self._fft_toggle = new_value
@@ -220,12 +223,15 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self.changed.emit(self)
 			self.fftColumnChanged.emit(self._fft_toggle)
 
-	
+	@property
+	def fft_transparency(self) -> float:
+		return self._fft_transparency
+
 
 	@property
-	def fft_line_range_left(self):
-		return self._fft_line_range.left_val
-	
+	def fft_line_range_left(self) -> int:
+		return self._fft_line_range.left_val #type: ignore
+
 	@fft_line_range_left.setter
 	def fft_line_range_left(self, new_left : int):
 		if self.fft_line_range_left is not new_left:
@@ -234,9 +240,9 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self.changed.emit(self)
 
 	@property
-	def fft_line_range_right(self):
-		return self._fft_line_range.right_val
-	
+	def fft_line_range_right(self) -> int:
+		return self._fft_line_range.right_val #type: ignore
+
 	@fft_line_range_right.setter
 	def fft_line_range_right(self, new_right : int):
 		if self.fft_line_range_right is not new_right:
@@ -249,18 +255,24 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 		return self._fft_line_range
 
 	@fft_line_range.setter
-	def fft_line_range(self, new_range : int):
+	def fft_line_range(self, new_range : LimitedRange):
 		if self.fft_line_range is not new_range:
 			self._fft_line_range = new_range
 			self.fftLineRangeChanged.emit(self._fft_line_range)
 			self.changed.emit(self)
 
+	@property
+	def fft_line_range_max(self) -> int:
+		return self._fft_line_range.max_val #type: ignore
+
+
+
 
 	@property
-	def fft_brightness(self):
-		return self.fft_brightness_limval.val
+	def fft_brightness(self) -> float:
+		return self.fft_brightness_limval.val #type: ignore #Is set using float, so returns float
 
-	
+
 	@fft_brightness.setter
 	def fft_brightness(self, new_brightness : float):
 		if self.fft_brightness_limval.val is not new_brightness:
@@ -269,10 +281,10 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self.changed.emit(self)
 
 	@property
-	def fft_quality(self):
-		return self.fft_quality_limval.val
+	def fft_quality(self) -> float:
+		return self.fft_quality_limval.val #type: ignore #Is set using float, so returns float
 
-	
+
 	@fft_quality.setter
 	def fft_quality(self, new_quality : float):
 		if self.fft_quality_limval.val is not new_quality:
@@ -282,10 +294,10 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self.changed.emit(self)
 
 	@property
-	def font_size(self):
-		return self._font_size_limval.val
+	def font_size(self) -> float:
+		return self._font_size_limval.val #type: ignore #Is set using float, so returns float
 
-	
+
 	@font_size.setter
 	def font_size(self, new_fontsize : float):
 		if self._font_size_limval.val is not new_fontsize:
@@ -296,20 +308,20 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 	@property
 	def fft_color_map(self) -> str:
 		return self._fft_color_map
-	
+
 	@fft_color_map.setter
-	def fft_color_map(self, new_color_map : str): 
+	def fft_color_map(self, new_color_map : str):
 		#TODO: check if color map exists? if not --> error
 		if new_color_map != self._fft_color_map:
 			self._fft_color_map = new_color_map
 			self.fftColorMapChanged.emit(self._fft_color_map)
 			self.changed.emit(self)
-	
-	
+
+
 	@property
 	def fft_color_map_options(self) -> typing.List[str]:
 		return self._fft_color_map_options
-	
+
 	@fft_color_map_options.setter
 	def fft_color_map_options(self, new_colormap_options : typing.List[str]):
 		if new_colormap_options != self._fft_color_map_options:
@@ -331,7 +343,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 	@property
 	def normalization_toggle(self) -> bool:
 		return self._normalization_toggle
-	
+
 	@normalization_toggle.setter
 	def normalization_toggle(self, new_value : bool):
 		if self._normalization_toggle != new_value:
@@ -339,9 +351,9 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self._normalization_toggle = new_value
 			self.normalizationToggleChanged.emit(self._normalization_toggle)
 			self.changed.emit(self)
-	
-	@property 
-	def plot_domain_limrange(self):
+
+	@property
+	def plot_domain_limrange(self) -> typing.Any:
 		return self._plot_domain_limrange
 
 	@plot_domain_limrange.setter
@@ -356,7 +368,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 	@property
 	def plot_domain_left(self):
 		return self.plot_domain_limrange.left_val
-	
+
 	@plot_domain_left.setter
 	def plot_domain_left(self, new_left):
 		# utility.safe_parse_new(new_left, datetime.datetime, dateutil.parser.parse) #Parse from string --> datetime.datetime
@@ -364,11 +376,11 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self.plot_domain_limrange.left_val = new_left #TODO: emit of limrange class is coupled --> is this the nicest way of doing this?
 			# self.plotDomainChanged.emit([self.plot_domain_limrange.left_val, self.plot_domain_limrange.right_val])
 			self.plotDomainLimrangeChanged.emit(self._plot_domain_limrange)
-	
+
 	@property
 	def plot_domain_right(self):
 		return self.plot_domain_limrange.right_val
-	
+
 	@plot_domain_right.setter
 	def plot_domain_right(self, new_right):
 		if self.plot_domain_limrange.right_val != new_right:
@@ -379,10 +391,10 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 
 
 	@property
-	def plot_list(self) -> typing.List[str]: 
-	# def plot_list(self) -> typing.List[str]: 
+	def plot_list(self) -> typing.List[str]:
+	# def plot_list(self) -> typing.List[str]:
 		return self._plot_list
-	
+
 	@plot_list.setter
 	def plot_list(self, new_plotlist : typing.List[str]):
 		log.debug(f"Trying to set model plotlist to {new_plotlist}")
@@ -393,10 +405,10 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self.changed.emit(self)
 
 	@property
-	def plotted_labels_list(self) -> typing.List[str]: 
-	# def plotted_labels_list(self) -> typing.List[str]: 
+	def plotted_labels_list(self) -> typing.List[str]:
+	# def plotted_labels_list(self) -> typing.List[str]:
 		return self._plotted_labels_list
-	
+
 	@plotted_labels_list.setter
 	def plotted_labels_list(self, new_plotlist : typing.List[str]):
 		log.debug(f"Trying to set model plotted_label_list to {new_plotlist}")
@@ -409,30 +421,9 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 
 
 	@property
-	def view_domain_left(self):
-		return self._view_domain_limrange.left_val
-	
-	@view_domain_left.setter
-	def view_domain_left(self, new_left):
-		if self._view_domain_limrange.left_val != new_left:
-			self._view_domain_limrange.left_val = new_left #TODO: emit of limrange class is coupled --> is this the nicest way of doing this?
-			self.viewDomainChanged.emit([self._view_domain_limrange.left_val, self._view_domain_limrange.right_val])	
-	
-	@property
-	def view_domain_right(self):
-		return self._view_domain_limrange.right_val
-	
-	@view_domain_right.setter
-	def view_domain_right(self, new_right):
-		if self._view_domain_limrange.right_val != new_right:
-			self._view_domain_limrange.right_val = new_right #TODO: emit of limrange class is coupled --> is this the nicest way of doing this?
-			self.viewDomainChanged.emit([self._view_domain_limrange.left_val, self._view_domain_limrange.right_val])	
-	
-
-	@property
 	def x_axis(self):
 		return self._x_axis
-	
+
 	@x_axis.setter
 	def x_axis(self, new_axis_name):
 		if new_axis_name != self.x_axis: #if changed
@@ -440,11 +431,11 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 				self.xAxisChanged.emit(self.x_axis)
 				self.changed.emit(self)
 
-	
+
 	@property
 	def plot_type(self):
 		return self._plot_type
-	
+
 	@plot_type.setter
 	def plot_type(self, new_plot_type):
 		log.info(f"Trying to change plottype in model to: {new_plot_type}")
@@ -454,9 +445,9 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 			self.changed.emit(self)
 
 	@property
-	def selection_gap_fill_ms(self):
-		return self._selection_gap_fill_ms_limval.val
-	
+	def selection_gap_fill_ms(self) -> int:
+		return self._selection_gap_fill_ms_limval.val #type: ignore
+
 	@selection_gap_fill_ms.setter
 	def selection_gap_fill_ms(self, new_gap_fill_ms : int):
 		if new_gap_fill_ms != self._selection_gap_fill_ms_limval.val: #if changed
@@ -479,7 +470,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 		# json.dumps(self.__dict__)
 		with open(path, "w") as file:
 			json.dump(self,file, default=lambda x: self.json_default(x), indent=4)
-		
+
 		log.info(f"Saved plot options to {path}")
 		# exit(0)
 
@@ -488,9 +479,8 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): #Note: The ord
 
 
 	#============ For pickling etc. =================
-	def __setstate__(self, state):
-		# Restore attributes
-		self.__dict__.update(state)
-		# Call the superclass __init__()
-		super(self).__init__()
-		
+	# def __setstate__(self, state):
+	# 	# Restore attributes
+	# 	self.__dict__.update(state)
+	# 	# Call the superclass __init__()
+	# 	super(self).__init__() 

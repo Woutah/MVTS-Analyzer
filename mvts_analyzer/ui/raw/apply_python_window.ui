@@ -14,8 +14,8 @@
    <string>Apply Python Code</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../res/app_resources.qrc">
-    <normaloff>:/Icons/icons/Custom Icons/execute_python.png</normaloff>:/Icons/icons/Custom Icons/execute_python.png</iconset>
+   <iconset>
+    <normaloff>:/Icons/icons/Custom Icons/execute_python.svg</normaloff>:/Icons/icons/Custom Icons/execute_python.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="enabled">
@@ -82,7 +82,7 @@
           </property>
           <property name="icon">
            <iconset resource="../../res/app_resources.qrc">
-            <normaloff>:/Icons/icons/Custom Icons/execute_python.png</normaloff>:/Icons/icons/Custom Icons/execute_python.png</iconset>
+            <normaloff>:/Icons/icons/Custom Icons/execute-python.svg</normaloff>:/Icons/icons/Custom Icons/execute-python.svg</iconset>
           </property>
          </widget>
         </item>
@@ -142,7 +142,7 @@
   <action name="actionSaveAs">
    <property name="icon">
     <iconset resource="../../res/app_resources.qrc">
-     <normaloff>:/Icons/icons/Tango Icons/actions/document-save-as.png</normaloff>:/Icons/icons/Tango Icons/actions/document-save-as.png</iconset>
+     <normaloff>:/Icons/icons/Tango Icons/actions/document-save-as.svg</normaloff>:/Icons/icons/Tango Icons/actions/document-save-as.svg</iconset>
    </property>
    <property name="text">
     <string>Save as...</string>
@@ -154,7 +154,7 @@
   <action name="actionOpenFromFile">
    <property name="icon">
     <iconset resource="../../res/app_resources.qrc">
-     <normaloff>:/Icons/icons/Tango Icons/actions/document-open.png</normaloff>:/Icons/icons/Tango Icons/actions/document-open.png</iconset>
+     <normaloff>:/Icons/icons/Tango Icons/actions/document-open.svg</normaloff>:/Icons/icons/Tango Icons/actions/document-open.svg</iconset>
    </property>
    <property name="text">
     <string>Open...</string>
@@ -172,7 +172,7 @@
    </property>
    <property name="icon">
     <iconset resource="../../res/app_resources.qrc">
-     <normaloff>:/Icons/icons/Tango Icons/actions/document-save.png</normaloff>:/Icons/icons/Tango Icons/actions/document-save.png</iconset>
+     <normaloff>:/Icons/icons/Tango Icons/actions/document-save.svg</normaloff>:/Icons/icons/Tango Icons/actions/document-save.svg</iconset>
    </property>
    <property name="text">
     <string>Save</string>

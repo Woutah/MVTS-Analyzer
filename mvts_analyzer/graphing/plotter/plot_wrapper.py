@@ -14,11 +14,12 @@ import matplotlib
 import matplotlib.axes
 import matplotlib.axis
 import matplotlib.backend_bases
+import matplotlib.cm
 import matplotlib.collections
 import matplotlib.colors
 import matplotlib.dates
-import matplotlib.dates as dates
 import matplotlib.gridspec
+import matplotlib.lines
 import matplotlib.patches
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
@@ -35,10 +36,14 @@ from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.graphing.plotter.collection_selector import \
     CollectionSelector
 from mvts_analyzer.res.Paths import Paths
+from mvts_analyzer.utility.GuiUtility import catch_show_exception_in_popup_decorator
 from mvts_analyzer.utility.GuiUtility import create_qt_warningbox
 
 log = logging.getLogger(__name__)
 
+class PlotError(Exception):
+	"""Exception raised when plotting fails"""
+	pass
 
 class DragDetector():
 	"""
@@ -96,7 +101,7 @@ class DragDetector():
 		self.canvas.draw_idle()
 
 
-	def on_release(self, event):
+	def on_release(self, event): #pylint: disable=unused-argument
 		"""On mouse-button release, stop dragging"""
 		if not self.dragging:
 			log.debug("was not dragging")
@@ -257,7 +262,7 @@ class MplCanvas(FigureCanvasQTAgg):
 
 	def remove_twinxes(self):
 		"""Remove all twinxes from the plot"""
-		for ax_name, ax in self.twinxes.items():
+		for ax_name in self.twinxes:
 			twinx_names =  list(self.twinxes[ax_name].keys())
 			for twinx_name in twinx_names:
 				del self.twinxes[ax_name][twinx_name]
@@ -314,6 +319,7 @@ class QPlotter(QtWidgets.QWidget):
 		# self.selector.pandasSelectionEdited.connect(lambda x: self.set_cur_loc_selection(x, redraw_after=True))
 
 	def handle_selection_change(self, new_selection : set):
+		"""Handle selection change, detect which key is being pressed and update the selection accordingly"""
 		mode = OperationType.OVERWRITE
 		try:  # used try so that if user pressed other than the given key error will not be shown
 			if keyboard.is_pressed('ctrl') or keyboard.is_pressed('shift'):  # if key 'q' is pressed
@@ -326,7 +332,8 @@ class QPlotter(QtWidgets.QWidget):
 
 
 	@staticmethod
-	def x_axis_reformatter(val):
+	def plot_title_reformatter(val):
+		"""Formats the title according to type of data"""
 		if isinstance(val, datetime.datetime):
 			val = val.strftime("%Y-%m-%d %H:%M:%S") #up until seconds precision
 		else:
@@ -335,21 +342,30 @@ class QPlotter(QtWidgets.QWidget):
 		return val
 
 	def replot(self,):
+		"""Replots the data using the current settings.
+		Note that we should not change the (plot)settings/data while replotting, as this could lead to unexpected
+		behaviour.
+
+		The replotting process consists of:
+			- Clearing the axes
+			- Plotting the main data
+			- Plotting the fft data
+			- Plotting the selection
+			- Plotting the annotations
+			- Plotting the selectors
+			etc.
+		"""
 		log.debug("Now trying to replot...")
 		try:
 			self._replot()
-		except Exception as err:
+		except Exception as err: #pylint: disable=broad-exception-caught
 			log.error(traceback.format_exc(), err)
-			# msg = QtWidgets.QMessageBox()
-			# msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
-			# msg.setText(f"{err}")
-			# msg.setWindowTitle("Exception")
-			# # msg.setDetailedText("The details are as follows:")
-			# # msg.setInformativeText("This is additional information")
-			# msg.exec_()
-			create_qt_warningbox(err, "Exception during replot: {err}")
+			create_qt_warningbox(str(err), "Exception during replot: {err}")
 
 	def _replot_fft(self):
+		"""
+		Replot the fft-data (numpy-array)
+		"""
 		if self.fft_data is None or self.fft_data[0] is None:
 			log.info("FFT data is none, could not replot")
 			return
@@ -364,13 +380,13 @@ class QPlotter(QtWidgets.QWidget):
 			fft_cmap = matplotlib.colors.LinearSegmentedColormap.from_list("custom", colordict, N=256)
 
 		else:
-			fft_cmap = plt.get_cmap(self.settings_model.fft_color_map)
+			fft_cmap = plt.get_cmap(self.settings_model.fft_color_map) #type: ignore
 
 
 
-		fft_cmap = fft_cmap(np.arange(fft_cmap.N))
-		fft_cmap[:, -1] = self.settings_model._fft_transparency
-		fft_cmap = matplotlib.colors.ListedColormap(fft_cmap)
+		fft_cmap = fft_cmap(np.arange(fft_cmap.N)) #type: ignore
+		fft_cmap[:, -1] = self.settings_model.fft_transparency #type: ignore 
+		fft_cmap = matplotlib.colors.ListedColormap(fft_cmap) #type: ignore
 
 		X, Y, Z = self.fft_data
 		log.debug(f"Creating mesh of dimensions: {len(X)}")
@@ -383,12 +399,11 @@ class QPlotter(QtWidgets.QWidget):
 		log.debug("Now creating left axis")
 		cur_ax = self.canvas.get_twinx("main", "AAFFT") #Get
 
-		# cur_ax.set_zorder(self.canvas.get_axis("main").get_zorder()-2)
-		# cur_ax.set_zorder(-10)
-		# cur_ax.patch.set_visible(False)
 
-		#TODO TODO high importance : make 1000 variable as well -> _fft_line_range max should also be private so make a get method?
-		cur_ax.set_ylim(1000 * self.settings_model.fft_line_range_left/self.settings_model._fft_line_range.max_val, 1000 * self.settings_model.fft_line_range_right/self.settings_model._fft_line_range.max_val)
+		cur_ax.set_ylim(
+			1000 * self.settings_model.fft_line_range_left/self.settings_model.fft_line_range_max,
+			1000 * self.settings_model.fft_line_range_right/self.settings_model.fft_line_range_max
+		)
 		cur_ax.spines['left'].set_position(("axes", -0.0 ))
 		cur_ax.yaxis.tick_left()
 		cur_ax.yaxis.set_label_position('left')
@@ -410,7 +425,7 @@ class QPlotter(QtWidgets.QWidget):
 
 		plot_xlim = self.settings_model.plot_domain_limrange
 		cols = ["DateTime", self.settings_model.fft_column]
-		fft_df = self.data_model._df[cols]
+		fft_df = self.data_model.df[cols] #type: ignore #Assertion is done on replot()-call, so ignore none-possibility
 		fft_df = fft_df.sort_values("DateTime", ascending=True).dropna() #TODO: make this more elegant
 
 
@@ -427,43 +442,27 @@ class QPlotter(QtWidgets.QWidget):
 
 		y_len = self.settings_model.fft_line_range_right - self.settings_model.fft_line_range_left
 		y_res_reduction = int(51 - 50*math.pow(self.settings_model.fft_quality, 1/5))
-		X, Y, Z = [], [], []
-		X = fft_df["DateTime"].to_numpy()
-		Y = np.array([i/ math.ceil(y_len/y_res_reduction) for i in range(math.ceil(y_len/y_res_reduction))]) #TODO: Don't hardcode 1601, change based on amount of lines
+		fft_x, fft_y, fft_z = [], [], []
+		fft_x = fft_df["DateTime"].to_numpy()
+		fft_y = np.array(
+			[i/ math.ceil(y_len/y_res_reduction) for i in range(math.ceil(y_len/y_res_reduction))]
+		) #TODO: Don't hardcode 1601, change based on amount of lines
 		# print(fft_df[self.settings_model.fft_column].tolist())
-		Z = np.array(fft_df[self.settings_model.fft_column].tolist())[:, self.settings_model.fft_line_range_left : self.settings_model.fft_line_range_right] #DO this this way, as fft_df[self.
+		fft_z = np.array(
+			fft_df[self.settings_model.fft_column].tolist()
+		)[:, self.settings_model.fft_line_range_left : self.settings_model.fft_line_range_right] #DO this this way, as fft_df[self.
 
 		# fft_column] creates an array of lists
-		Z = np.swapaxes(Z, 0, 1)
+		fft_z = np.swapaxes(fft_z, 0, 1)
 
 		if y_res_reduction > 1:
-			Z = block_reduce(Z, block_size=(y_res_reduction,1), func=np.mean) #reduce y-resolution by a factor 10
-		log.debug(f"FFT max is : {np.max(Z)}")
-		log.debug(f"Reduction factor: {y_res_reduction}  --- Z size is: {Z.shape}   Y shape is: {Y.shape}")
+			fft_z = block_reduce(fft_z, block_size=(y_res_reduction,1), func=np.mean) #type:ignore reduce y-resolution
+		log.debug(f"FFT max is : {np.max(fft_z)}")
+		log.debug(f"Reduction factor: {y_res_reduction}  --- Z size is: {fft_z.shape}   Y shape is: {fft_y.shape}")
 
-		Z = (Z / Z.mean() * pow(self.settings_model.fft_brightness * 2, 5))
-		self.fft_data = (X, Y, Z)
+		fft_z = (fft_z / fft_z.mean() * pow(self.settings_model.fft_brightness * 2, 5))
+		self.fft_data = (fft_x, fft_y, fft_z)
 
-
-	# def _handle_matplotlib_movement(self, event):
-	# 	cur_ax = event.inaxes
-
-		# for name, ax in self.canvas.ax_dict.items():
-		# 	if ax == cur_ax: #If ax is found
-		# 		if name != "main":
-		# 			log.debug(f"Event in ax {name} -> {event.xdata}")
-		# 			try:
-		# 				if self.canvas.annots[name] is None:
-		# 					log.debug(f"No annots for {name}")
-		# 					self.canvas.annots[name] = ax.annotate("Kaas", xy=(event.xdata, event.ydata), xytext=(0,5), textcoords="offset points")
-		# 					log.debug(f"Annots are now: {self.canvas.annots[name]}")
-		# 				else:
-		# 					self.canvas.annots[name].set_text("Kaas")
-		# 			except Exception as ex:
-		# 				log.warning(f"Could not annotate axis {name} due to: {type(ex)}={ex}")
-
-		# 			annot = ax.annotate("Kaas", xy=(event.xdata, event.ydata), xytext=(0,5), textcoords="offset points")
-		# 			annot.set_visible(True)
 
 
 	def _replot_colorbars(self):
@@ -471,25 +470,24 @@ class QPlotter(QtWidgets.QWidget):
 
 		Args:
 			df (pd.DataFrame): Pandas dataframe containing at least a "DateTime" column and a column indicating a class
-			color_column (str, optional): The color-class column, each unique entry in this column will be plotted as a separate color. Defaults to "Prediction".
+			color_column (str, optional): The color-class column, each unique entry in this column will be plotted as
+				a separate color. Defaults to "Prediction".
 			legend_name_dict (dict, optional): Dictionary with translations for each class for the legend, e.g.:
-				if two unique classes exists: [0, 1], and legend name dict={0: "Class1", 1: "Class2"}, then legend names will be
-				"Class1" and "Class2" instead of 1&2.
+				if two unique classes exists: [0, 1], and legend name dict={0: "Class1", 1: "Class2"}, then legend names
+				will be "Class1" and "Class2" instead of 1&2.
 			Defaults to {}.
 		"""
 		before= time.perf_counter()
 		label_columns = self.settings_model.plotted_labels_list #Get list of plotted label-columns
 		log.debug(f"Label columns: {label_columns}")
 
-		if len(label_columns) == 0:
+		if len(label_columns) == 0 or self.selected_data is None:
 			return
 
 		all_classes = set({})
-		# dt_lbl_df = self.data_model.df[["DateTime", *label_columns]].sort_values("DateTime", ascending=True).fillna("None")
 		before1= time.perf_counter()
-		dt_lbl_df = self.selected_data[["DateTime", *label_columns]].sort_values("DateTime", ascending=True)  #Changed 20220520 due to time issues when operating on whole dataframe each time
+		dt_lbl_df = self.selected_data[["DateTime", *label_columns]].sort_values("DateTime", ascending=True)
 		dt_lbl_df.fillna(np.nan) #To make sure <nans> are processed properly
-		# dt_lbl_df.fillna(value=0)
 		if len(dt_lbl_df) == 0:
 			log.info("Not plotting colorbar as length of dataframe is 0")
 			return
@@ -498,47 +496,51 @@ class QPlotter(QtWidgets.QWidget):
 
 		for col in label_columns:
 			all_classes.update(list(dt_lbl_df[col].unique())) #Use this for only classes in current view
-		all_classes = [i for i in all_classes if i is not None and not pd.isna(i) and(not isinstance(i, numbers.Number) or not np.isnan(i)) and i != "nan"] #All classes except NaN (numpy), <NA> (pandas) (make sure to check for <NA> first as otherwise error is trhowns)
+		all_classes = [i for i in all_classes if i is not None
+			and not pd.isna(i)
+			and(not isinstance(i, numbers.Number) or not np.isnan(i)) and i != "nan" #type: ignore
+		] #All classes except NaN (numpy), <NA> (pandas) (make sure to check for <NA> first)
 
 
 		all_classes = set([i for i in all_classes if i != "None"])
 		log.debug(f"Found classes: {all_classes}")
-		colors = matplotlib.cm.rainbow(np.linspace(0,1,len(all_classes))) #get new color for each class
+		#get new color for each class
+		colors = matplotlib.cm.rainbow(np.linspace(0,1,len(all_classes))) #pylint: disable=no-member #type:ignore
 
 		#====== Manually add "None" string ==============
 		all_classes = ["None"] + list(all_classes)
 		colors = np.insert(colors, 0, np.array((0.5, 0.5, 0.5, 0.3)), axis=0)
 
 		all_classes_dict = { item : nr for (nr,item) in enumerate(all_classes)}
-		all_classes = np.array(list(all_classes)) #Set back to numpy for indexing options #20221021 moved this after creation all_classes dict -> otherwise they become strings
-
-
-		# self.canvas.add_axes(label_columns, [i+1 for i in range(len(label_columns))], [0.5 / len(label_columns) for i in range(len(label_columns))])
+		all_classes = np.array(list(all_classes)) #Set back to numpy for indexing options
 		self.canvas.add_axes(label_columns, [i+1 for i in range(len(label_columns))], [0.3 for i in range(len(label_columns))])
-
-		color_map = matplotlib.colors.ListedColormap(colors)
+		color_map = matplotlib.colors.ListedColormap(colors) #type: ignore
 
 
 		log.debug(f"Label columns: {label_columns}")
 
 		axes = [self.canvas.get_axis(label_col) for label_col in label_columns]
 
-		annot=None
-
-		for ax, label_col in zip(axes, label_columns): #Go over label columns
+		for ax, label_col in zip(axes, label_columns): #Go over label columns #pylint: disable=invalid-name
 			log.debug(f"Now plotting colorbar for column '{label_col}'")
 			before1= time.perf_counter()
-			dt_lbl_original = dt_lbl_df[["DateTime", label_col]].copy() #.to_numpy() #Should already be sorted descending, as such this should be more efficient TODO: make sure this stays this way - als: na_value can be used instead of fillna earlier
+			dt_lbl_original = dt_lbl_df[["DateTime", label_col]].copy() #.to_numpy() #Should already be sorted
+				#descending, as such this should be more efficient
+				# TODO: make sure this stays this way - als: na_value can be used instead of fillna earlier
 			dt_lbl = dt_lbl_original.copy()
-			dt_lbl[label_col] = dt_lbl[label_col].astype("object").replace(to_replace=all_classes_dict).astype("Int64") #Replace all entries by a number indicating its class (Use Object because this will fit every datatype), (or None/NaN), then it should all be Integers (Int64 instead of in64 due to Nones)
+			#Replace all entries by a number indicating its class (Use Object because this will fit every datatype),
+			#	(or None/NaN), then it should all be Integers (Int64 instead of in64 due to Nones)
+			dt_lbl[label_col] = dt_lbl[label_col].astype("object").replace(to_replace=all_classes_dict).astype("Int64")
 			mask = ~(dt_lbl[label_col].isnull() & dt_lbl[label_col].shift(1).isnull()) #Remove repeating Nones
-			mask = mask & ((dt_lbl[label_col].shift(1) != dt_lbl[label_col]).fillna(value=True))# | (dt_lbl[label_col].shift(1).isnull() & ~(dt_lbl[label_col].isnull())) )  #Remove repeating others #ADDED 20221021 replace NaN entries in mask by True -> for Int64 (capital i -> with NaN), it seems 3!=NaN results in NaN
+			mask = mask & ((dt_lbl[label_col].shift(1) != dt_lbl[label_col]).fillna(value=True))
 			mask.iloc[0] = True #Always take first
 			mask.iloc[-1] = True #And always take last
-			dt_lbl = dt_lbl.loc[mask] #Shift by 1 and compare with itself -> repeating values will be deleted and only first one remains
+			dt_lbl = dt_lbl.loc[mask] #Shift by 1 and compare with itself -> repeating values after first will be deleted
 			dt_lbl = dt_lbl.fillna(value=0)
 			#TODO: commented following line:
-			# dt_lbl[label_col] = dt_lbl[label_col].astype(np.int64) #No nones should remain -> this should succeed. NOTE: pd.Int64Dtype() created errors, even when first converting to numpy, this makes sure everything works before plotting
+			# 	dt_lbl[label_col] = dt_lbl[label_col].astype(np.int64) #No nones should remain -> this should succeed.
+			# 	NOTE: pd.Int64Dtype() created errors, even when first converting to numpy, this makes sure everything
+			# 	works before plotting
 
 			X, Y, Z = [], [], []
 
@@ -546,7 +548,8 @@ class QPlotter(QtWidgets.QWidget):
 
 
 			X = dt_lbl["DateTime"].to_numpy()
-			Z = dt_lbl[label_col].astype("int64").to_numpy() #Added 20221021 -> every class (including None =0 )should be an integer now -> make sure interpreted as such
+			Z = dt_lbl[label_col].astype("int64").to_numpy() #Added 20221021 -> every class (including None =0 )should
+				#be an integer now -> make sure interpreted as such
 			log.debug(f"Calculating least squares pcolormesh for {label_col} took : {time.perf_counter() - before1}")
 
 			before1 = time.perf_counter()
@@ -630,13 +633,16 @@ class QPlotter(QtWidgets.QWidget):
 
 
 
-	def _recolor_selection_scatter(self, ax, ind_selection, collection, base_colors, length):
-		# base_colors[:, :3] = 0.75 * (1.0 - base_colors[:, :3]) + base_colors[:, :3]
+	def _recolor_selection_scatter(self, ax, ind_selection, collection, base_colors):
+		"""Recolor the selection in a scatterplot
+		"""
 		fc = base_colors.copy()
-		# slice = [i for i in range(length) if i not in ind_selection]
-		kaas = fc[:, :3]
-		fc[:, :3] = 0.75 * (1.0 - fc[:, :3]) + fc[:, :3] #Lighten everything except selected points
-		fc[ind_selection] = base_colors[ind_selection]
+		
+		if len(ind_selection) == 0: #Color normally if no selection
+			fc[ind_selection] = base_colors[ind_selection]
+		else:
+			fc[:, :3] = 0.75 * (1.0 - fc[:, :3]) + fc[:, :3] #Lighten everything except selected points
+			fc[ind_selection] = base_colors[ind_selection]
 
 		collection.set_facecolors(fc)
 		collection.set_edgecolors(fc)
@@ -674,7 +680,7 @@ class QPlotter(QtWidgets.QWidget):
 					plot_ind.append(i) #Append all indexes of values that have been selected
 
 			if self.cur_plot_type == "Scatter":
-				self._recolor_selection_scatter(ax, plot_ind, self.collections[ax_idx], colors, length)
+				self._recolor_selection_scatter(ax, plot_ind, self.collections[ax_idx], colors)
 			else:
 				self._recolor_selection_lineplot(plot_ind, self.collections[ax_idx], colors, length)
 
@@ -707,7 +713,7 @@ class QPlotter(QtWidgets.QWidget):
 			color_col = self.settings_model.plot_color_column
 			try:
 				self.legend_names = set([])
-				for name in  self.data_model.df[color_col].unique():
+				for name in  self.data_model.df[color_col].unique(): #type: ignore
 					if type(name) == float and np.isnan(name) or pd.isna(name): #Treat NaN as None
 						self.legend_names.add(None)
 						continue #Don't add nan
@@ -717,17 +723,18 @@ class QPlotter(QtWidgets.QWidget):
 				log.warning(f"Cannot create color legend for this plot: {ex}")
 
 		log.debug(f"Legend names {self.legend_names}")
-		# self.legend_colors = [color for color in col_colors[:len(self.legend_names)]]
 
-		col_colors = matplotlib.cm.tab10.colors #Default color scheme (but only works up to 10 colors)
-		col_colors = [[*color, 1.0] for color in col_colors] #Alpha is missing by default
+		#Default color scheme (but only works up to 10 colors)
+		col_colors = matplotlib.cm.tab10.colors #pylint: disable=no-member #type: ignore
+		col_colors : list[list[float]] = [[*color, 1.0] for color in col_colors] #Alpha is missing by default #type: ignore
 		if len(self.legend_names) > 10: #Otherwise create a linear separation
-			col_colors = matplotlib.cm.rainbow(np.linspace(0,1,len(self.legend_names))) #get new color for each class
+			#get new color for each class
+			col_colors = matplotlib.cm.rainbow(np.linspace(0,1,len(self.legend_names))) #pylint: disable=no-member #type: ignore
 
 		assert(len(col_colors) >= len(self.legend_names)) #This has gone wrong before.... Make sure there are enough colors otherwise the dictionary will fail in a later stage
 
 		color_dict = {name : np.array(color) for name, color in zip(self.legend_names, col_colors)}
-		color_dict[None] = np.array([.8, .8, 0.8, 1])
+		color_dict[None] = np.array([.8, .8, 0.8, 1]) #type: ignore
 		# color_dict[None] = "kaas"
 
 		self.legend_colors_dict = color_dict
@@ -752,6 +759,8 @@ class QPlotter(QtWidgets.QWidget):
 
 		previous_ax_rect_loc = (0,0)
 		self._drag_detectors = []
+
+		assert(self.selected_data is not None), "Selected data is None, cannot replot. This should have been caught earlier."
 		# exit(0)
 		for col_idx, (col, col_color) in enumerate(zip(list(self.settings_model.plot_list), col_colors)): #go over columns (and give each one a color)
 
@@ -759,68 +768,64 @@ class QPlotter(QtWidgets.QWidget):
 				continue
 
 			nan_mask = np.isfinite(self.selected_data[col])
-			# nan_mask = self.selected_data.index
-			# self.selected_data = self.selected_data.fillna(np.nan)
-			# self.selected_data = self.selected_data.replace({np.nan: None})
-
 
 			cur_locs = self.selected_data.index.to_numpy()[nan_mask]
 			self.data_locs.append(cur_locs) #To translate in-graph selection back to pandas selection
-			X = self.selected_data[self.settings_model.x_axis].to_numpy()[nan_mask] #Remove nan entries #TODO: what if date is none?
-			Y = self.selected_data[col].to_numpy()[nan_mask]
+			x_vals = self.selected_data[self.settings_model.x_axis].to_numpy()[nan_mask] #Remove nan entries #TODO: what if date is none?
+			y_vals = self.selected_data[col].to_numpy()[nan_mask]
 
-			if len(X) == 0 or len(Y) == 0: #Skip if no data
+			if len(x_vals) == 0 or len(y_vals) == 0: #Skip if no data
 				log.info(f"Columns {col} contained no data... Skipping plotting")
 				continue
 
 			cur_ax : matplotlib.axes.Axes = self.canvas.get_twinx("main", col) #Get
-			# cur_ax.set_zorder(self.canvas.get_axis("main").get_zorder()+1)
-			# cur_ax.patch.set_visible(False)
-
-			# a = X[0]
-			# b = X[-1]
-
-			# cur_ax.set_zorder(self.canvas.get_axis("main").get_zorder() - 2) #Get) #Get
-
-			# data_gap_mask = [] #Don't connect datapoints in line-graph if time-distance is more than x seconds
-			x_axis_is_dt = isinstance(X[0], pd.Timestamp) or isinstance(X[0], np.datetime64) or pd.api.types.is_datetime64_any_dtype(X[0])
-			if x_axis_is_dt:
-				X = dates.date2num(X)
+			if isinstance(x_vals[0], pd.Timestamp)\
+					or isinstance(x_vals[0], np.datetime64)\
+					or pd.api.types.is_datetime64_any_dtype(x_vals[0]):
+				x_vals : np.ndarray = matplotlib.dates.date2num(x_vals) #type: ignore
 
 
 
 
-			XYs.append( np.vstack((X, Y)).T)
+			XYs.append( np.vstack((x_vals, y_vals)).T)
 
-			self.data_lengths.append(len(X))
+			self.data_lengths.append(len(x_vals))
 			self.data_axes.append(cur_ax)
-			cur_ax.yaxis.label.set_color(col_color)
-			cur_ax.spines['right'].set_color(col_color)
+			cur_ax.yaxis.label.set_color(col_color) #type: ignore #(r, g, b, a)
+			cur_ax.spines['right'].set_color(col_color) #type: ignore
 
-			diff =  abs((max(Y) - min(Y))* 0.05)
-			minmax = ( min(Y) - diff, max(Y) + diff) #Take some leeway in the plot to better see edges
-			cur_ax.set_ylim(minmax)
+			diff =  abs((max(y_vals) - min(y_vals))* 0.05)
+			minmax = ( min(y_vals) - diff, max(y_vals) + diff) #Take some leeway in the plot to better see edges
+			cur_ax.set_ylim(minmax) #type: ignore
 			minmaxes.append(minmax)
 
-			x_transform = mtransforms.IdentityTransform() + mtransforms.ScaledTranslation(1,0, cur_ax.transAxes) #Set axes-based offset (right outer edge of axis)
-			transform = mtransforms.blended_transform_factory(x_transform, cur_ax.transAxes) #x-axis in pixels, y-axis in axes coords
-			# spine_width = 20
-			#Get spine width in pixels
-						#Get dpi of figure
+			x_transform = mtransforms.IdentityTransform() \
+				+ mtransforms.ScaledTranslation(1,0, cur_ax.transAxes) #Set axes-based offset (right outer edge of axis)
+			transform = mtransforms.blended_transform_factory(
+				x_transform, cur_ax.transAxes) #x-axis in pixels, y-axis in axes coords
+
 			dpi = self.canvas.figure.get_dpi()
 
 			cur_ax.spines['right'].set_position(
-				('outward', previous_ax_rect_loc[0]/(0.013888*dpi)) #NOTE: 1.388=@100dpi, probabably amount of inches? This `should` work on all dpi's
+				('outward', previous_ax_rect_loc[0]/(0.013888*dpi)) #NOTE: 1.388=@100dpi, probabably amount of inches?
+				# 	This fix `should` work on all dpi's
 			) #each axis 60 pixels to the right #TODO: constant?
-			# cur_ax.spines['right'].set_position(('outward', col_idx * spine_width)) #each axis 60 pixels to the right #TODO: constant?
 			cur_ax.tick_params(axis='y', colors=col_color, labelrotation=90)
-			spine_width = cur_ax.spines['right'].get_tightbbox(self.canvas.get_renderer()).width + self.settings_model.font_size
+			spine_width = cur_ax.spines['right'].get_tightbbox(
+				self.canvas.get_renderer()).width + self.settings_model.font_size
 			#Also add the width of the ticklabels
 			spine_width += cur_ax.yaxis.get_ticklabels()[0].get_window_extent().width
 
 
-			# self.rectangle = matplotlib.patches.Rectangle((col_idx * spine_width * self.settings_model.font_size/10.0 * 1.388, 0), 20 * 1.388, 1, fc=col_color, alpha=0.15, transform=transform, clip_on=False) #TODO: Not sure shy a factor is neccesary here,
-			self.rectangle = matplotlib.patches.Rectangle((previous_ax_rect_loc[0], previous_ax_rect_loc[1]), spine_width, 1, fc=col_color, alpha=0.15, transform=transform, clip_on=False) #TODO: Not sure shy a factor is neccesary here,
+			self.rectangle = matplotlib.patches.Rectangle(
+				(previous_ax_rect_loc[0], previous_ax_rect_loc[1]),
+				spine_width,
+				1,
+				fc=col_color,
+				alpha=0.15,
+				transform=transform,
+				clip_on=False
+			) #TODO: Not sure shy a factor is neccesary here,
 
 			previous_ax_rect_loc = ( #Get top right corner of rectangl
 				self.rectangle.get_bbox().get_points()[1][0], #x1y1-> pick x1
@@ -841,70 +846,50 @@ class QPlotter(QtWidgets.QWidget):
 
 
 			if color_based_on_col: #If all datapoints same color
-				self.data_colors.append(np.tile(np.array([col_color[0], col_color[1], col_color[2], 1.0]), (len(X), 1)), )
+				self.data_colors.append(np.tile(np.array([col_color[0], col_color[1], col_color[2], 1.0]), (len(x_vals), 1)), )
 			else: #If color based on class
+				color_col = "ERR"
 				try:
-					# color_col = self.settings_model.plot_color_column
-					# # color_arr = color_arr.fillna(np.nan)
-					# color_arr = self.selected_data.loc[nan_mask, color_col].fillna(np.nan).replace({np.nan: None})#NOTE/TODO: Inserting np.nan in a separate dictionary and then calling replace does not work and results in only the first Nan value being replaced, only if np.nan is in the constructore inside .replace() as denoted here
-					# # color_arr = color_arr.fillna(None)
-					# # color_arr = np.array(color_arr.map(color_dict).tolist())
-
-					# # color_arr = self.selected_data[color_col].values
-					# color_arr = color_arr.map(color_dict).to_list()
-
-					# # kaas = np.unique(color_arr)
-
-					# self.data_colors.append(color_arr)
-
-					# # temp = np.tile(np.array([col_color[0], col_color[1], col_color[2], 1.0]), (len(X), 1))
-					# # kaas = np.array(color_arr[:10])
-					# kaas1 = self.selected_data.loc[nan_mask, color_col].to_numpy()[4000:4100]
 					color_col = self.settings_model.plot_color_column
-					color_arr = self.selected_data.loc[nan_mask, color_col].fillna(np.nan).replace({np.nan:None, nan:None, None: None, pd.NaT : None, pd.NA: None}) #NOTE/TODO: Inserting np.nan in a separate dictionary and then calling replace does not work and results in only the first Nan value being replaced, only if np.nan is in the constructore inside .replace() as denoted here
+					color_arr = self.selected_data.loc[nan_mask, color_col].fillna(np.nan).replace(
+						{np.nan:None, nan:None, None: None, pd.NaT : None, pd.NA: None}
+					) #NOTE/TODO: Inserting np.nan in a separate dictionary and then calling replace does
+					# 	not work and results in only the first Nan value being replaced, only if np.nan is in the
+					# 	constructore inside .replace() as denoted here
 					color_arr = np.array(color_arr.map(color_dict).tolist())#[nan_mask]
 					self.data_colors.append(color_arr)
 
-					# temp = np.tile(np.array([col_color[0], col_color[1], col_color[2], 1.0]), (len(X), 1))
-					# kaas = np.array(color_arr[:10])
-
-
 
 				except KeyError as err:
-					raise KeyError(f"KeyError: Selected color-column ({color_col}) resulted in error: {err}, please make sure an existing column is selected under Plot Colors")
+					raise KeyError(f"KeyError: Selected color-column ({color_col}) resulted in error: {err}, please "
+		    			f"make sure an existing column is selected under Plot Colors")
 			# idx_sorted = np.argsort(self.legend_names)
 			log.debug(f"Plotting column: {col}")
 
 
 			if self.cur_plot_type == "Scatter":
-				self.collections.append(cur_ax.scatter(X, Y, c=self.data_colors[-1], label=col, s=1)) #Always plot scatter TODO: is this neccesary for lassoselector?
+				self.collections.append(cur_ax.scatter(x_vals, y_vals, c=self.data_colors[-1], label=col, s=1)) #Always plt scatter
 			else:
-				before = time.perf_counter()
 
 				#========== Set color for points far from eachother =========
 				dts = self.selected_data["DateTime"].to_numpy()[nan_mask] #TODO: "DateTime is hardcoded here"
 				dt_distances = (dts[:-1] - dts[1:]) / np.timedelta64(1, 's')
 				dt_distances_mask = dt_distances > 100 #If more than 100 seconds
-				# kaas = np.where(dt_distances == True)
-				kaas = np.sum(dt_distances_mask)
 				self.data_colors[-1][:-1][dt_distances_mask] = self.data_colors[-1][:-1][dt_distances_mask] * [1, 1, 1, 0.1]#Select data colors => skip last value => all where threshold is true => set alpha (-1) to 0.1
 
-				# dt_too_far_apart = # Don't connect points further than x seconds from eachother
-
-
 				#===============0.298 lineplot ====================
-				a = np.expand_dims(np.vstack((X[:-1], Y[:-1])), axis=1)
-				b = np.expand_dims(np.vstack((X[1:], Y[1:])), axis=1)
-				lines = np.vstack((a, b)).T
-				lines = lines.reshape(len(X) - 1, 2, 2)
-				lc = matplotlib.collections.LineCollection(lines, colors=self.data_colors[-1])
-				cur_ax.add_collection(lc)
-				self.collections.append(lc)
+				line_starts = np.expand_dims(np.vstack((x_vals[:-1], y_vals[:-1])), axis=1)
+				line_ends = np.expand_dims(np.vstack((x_vals[1:], y_vals[1:])), axis=1)
+				lines = np.vstack((line_starts, line_ends)).T
+				lines = lines.reshape(len(x_vals) - 1, 2, 2)
+				line_coll = matplotlib.collections.LineCollection(lines, colors=self.data_colors[-1]) #type: ignore
+				cur_ax.add_collection(line_coll) #type: ignore
+				self.collections.append(line_coll)
 
 			log.debug("Data collections created and added to matplotlib")
 
 
-		self.canvas.ax_dict["main"].set_facecolor([0, 0, 0, 0]) #Make main axis transparent
+		self.canvas.ax_dict["main"].set_facecolor([0, 0, 0, 0]) #Make main axis transparent #type: ignore
 
 		#set rspline of main axis invisible
 		self.canvas.ax_dict["main"].spines["right"].set_visible(False)
@@ -912,7 +897,7 @@ class QPlotter(QtWidgets.QWidget):
 
 		# self.canvas.ax_dict["main"].rspine.set_visible(False) #Make main axis transparent
 
-		self.selector.reset_all(self.canvas.ax_dict["main"], XYs, minmaxes, self.data_locs)
+		self.selector.reset_all(self.canvas.ax_dict["main"], XYs, minmaxes, self.data_locs) #type: ignore
 
 		if self.data_model.df_selection is not None and len(self.data_model.df_selection) > 0: #If at least 1 points slected
 			self._set_selection(self.data_model.df_selection)
@@ -927,7 +912,7 @@ class QPlotter(QtWidgets.QWidget):
 		legend_indicator_list = []
 		for name in  self.legend_names:
 			color = self.legend_colors_dict[name]
-			legend_indicator_list.append(matplotlib.lines.Line2D([0], [0], color=color, lw=4))
+			legend_indicator_list.append(matplotlib.lines.Line2D([0], [0], color=color, lw=4)) #type: ignore (rgba)
 		legend_indicators = np.array(legend_indicator_list)
 
 		# legend_indicators = np.array([ matplotlib.lines.Line2D([0], [0], color=self.legend_colors_dict[name], lw=4) for name in self.legend_names ]) #line figures in legend
@@ -937,16 +922,21 @@ class QPlotter(QtWidgets.QWidget):
 		log.debug(f"legend colors: {self.legend_colors_dict}")
 
 
-		# plt.title(self.plot_title)
 		self.canvas.figure.suptitle(self.plot_title)
-		# exit(0)
 
-		self.canvas.ax_dict["main"].set_xlim(left=self.settings_model.plot_domain_limrange.left_val, right=self.settings_model.plot_domain_limrange.right_val)
+		self.canvas.ax_dict["main"].set_xlim(
+			left=self.settings_model.plot_domain_limrange.left_val,
+			right=self.settings_model.plot_domain_limrange.right_val)
 		self.canvas.ax_dict["main"].set_ylim(0, 1)
 
-
-		# self.canvas.ax_dict["main"].legend(legend_indicators[idx_sorted], legend_names[idx_sorted], loc='upper center', bbox_to_anchor=(0.5, 1.08), ncol = len(legend_names))
-		main_legend = self.canvas.ax_dict["main"].legend(legend_indicators[idx_sorted], legend_names[idx_sorted], loc='upper center', bbox_to_anchor=(0.5, 1.007), ncol = min(len(legend_names), 10), frameon=False)
+		if len(legend_names) > 0:
+			main_legend = self.canvas.ax_dict["main"].legend(
+				legend_indicators[idx_sorted], legend_names[idx_sorted],
+				loc='upper center',
+				bbox_to_anchor=(0.5, 1.007),
+				ncol = min(len(legend_names), 10),
+				frameon=False
+			)
 
 
 
@@ -977,32 +967,24 @@ class QPlotter(QtWidgets.QWidget):
 
 
 	def _reload_selected_data(self):
-		# self.selected_data = self.settings_model.df[list(set([i for i in self.settings_model.plots if i is not None]))]
-
-		# #============= X Axis ============
-		# if x_axis is None:
-		# 	log.error(f"X-Axis {self.settings_model.x_axis} not found in provided data, defaulting to table index")
-		# else:
-		# 	log.info(f"Using x-axis: {x_axis}")
-		# 	self.selected_data[self.settings_model.x_axis] = self.settings_model.df[[self.settings_model.x_axis]]
-
-
+		"""Reload the main """
 		#===========Plot xlim===================== TODO: xlim implementation
 		x_axis = self.settings_model.x_axis
 		plot_xlim = self.settings_model.plot_domain_limrange
 		self.plot_title = ""
 		self.selected_data = self.data_model._df #Create dataframe view of data that is to be plotted
 
-		for filter in self.settings_model.plot_filters:
+		for filt in self.settings_model.plot_filters:
 			try:
-				temp = filter(self.selected_data)
+				temp = filt(self.selected_data)
 				self.selected_data = temp
-			except Exception as err:
+			except Exception as err: #pylint: disable=broad-exception-caught
 				msg = f"Issue while filtering data in view : {err}"
 				log.error(msg)
 				create_qt_warningbox(msg)
 
-		self.selected_data = self.selected_data.loc[ self.selected_data.index.difference(self.data_model.hidden_datapoints)]
+		assert(self.selected_data is not None)
+		self.selected_data = self.selected_data.loc[ self.selected_data.index.difference(list(self.data_model.hidden_datapoints))]
 
 
 		if plot_xlim is not None and x_axis is not None:
@@ -1016,7 +998,7 @@ class QPlotter(QtWidgets.QWidget):
 				if isinstance(plot_xlim.left_val, float): #TODO: create a title formatter - is more neat
 					self.plot_title += str(round(plot_xlim.left_val, 2)) + "  -  "
 				else:
-					self.plot_title += self.x_axis_reformatter(plot_xlim.left_val) + "  -  "
+					self.plot_title += self.plot_title_reformatter(plot_xlim.left_val) + "  -  "
 
 
 			else:
@@ -1028,7 +1010,7 @@ class QPlotter(QtWidgets.QWidget):
 				if isinstance(plot_xlim.right_val, float):
 					self.plot_title += str(round(plot_xlim.right_val, 2))
 				else:
-					self.plot_title += self.x_axis_reformatter(plot_xlim.right_val)
+					self.plot_title += self.plot_title_reformatter(plot_xlim.right_val)
 
 
 				self.selected_data = self.selected_data[ self.selected_data[x_axis] <= plot_xlim.right_val ]
@@ -1037,30 +1019,30 @@ class QPlotter(QtWidgets.QWidget):
 			# if plot_xlim[0] is not None and plot_xlim[1] is not None: #TODO: do this in-plot
 			# 	self.canvas.ax.set_xlim(plot_xlim[0], plot_xlim[1])
 		else:
-			log.info(f"Plot xlim {self.settings_model.plot_domain_limrange} not used for axis {x_axis} due to <None> value (either left/right/xname)")
+			log.info(f"Plot xlim {self.settings_model.plot_domain_limrange} not used for axis {x_axis} due to <None> "
+	    		"value (either left/right/xname)")
 
 
 		#=============== Plot datetime ===================
 
 
-
+	@catch_show_exception_in_popup_decorator(custom_error_msg="<b>Plotting Failed</b>", re_raise=False)
 	def _replot(self):
 		self._colorbar_legend = None
 		if self.data_model._df is None:
-			log.error("Could not replot, no dataframe loaded")
-			return
+			log.error("Replot failed: no dataframe loaded")
+			raise PlotError("No dataframe loaded")
 		if self.settings_model.x_axis is None:
-			log.error("Could not replot, no x-axis selected")
-			return
+			log.error("Replot failed: No x-axis selected")
+			raise PlotError("No x-axis selected")
+	
+		if self.settings_model.plot_list is None or len(self.settings_model.plot_list) == 0:
+			if self.settings_model.plotted_labels_list is None or len(self.settings_model.plotted_labels_list) == 0:
+				log.error("Replot failed: No columns selected")
+				raise PlotError("No plot or label columns selected")
 
 		matplotlib.rcParams.update({'font.size' : self.settings_model.font_size}) #Setting font size
 		self.canvas.remove_axes(except_main=True) #Only keep main axis
-		# self.canvas.ax.clear() #TODO: put in canvas?
-		# for ax in self.canvas.axes.items():
-		# self.canvas.clear_axes() #TODO: neccesary for all?
-
-
-
 
 		self.canvas.figure.subplots_adjust(hspace=0.0)
 		before = time.perf_counter()
@@ -1071,12 +1053,14 @@ class QPlotter(QtWidgets.QWidget):
 
 		if self.settings_model.fft_toggle: #if fft is toggled on
 			if self.settings_model.x_axis != "DateTime": #TODO: do not hardcode "Datetime"? Maybe check pd.type
-				create_qt_warningbox("Warning: could not plot fft diagram because X-axis is not Datetime - Pleas turn off FFT or select DateTime for x-axis and replot")
+				create_qt_warningbox("Warning: could not plot fft diagram because X-axis is not Datetime - Pleas turn "
+			 		"off FFT or select DateTime for x-axis and replot")
 			else:
 				self._reload_fft_data()
 				self._replot_fft()
 		else:
-			self.canvas.ax_dict["main"].set_zorder(10) #Draw main axis on top for selection purposes (though this seems to make it so pcolormesh is drawn over all other plots so only do this if fft is off )
+			self.canvas.ax_dict["main"].set_zorder(10) #Draw main axis on top for selection purposes (though this seems
+			#	to make it so pcolormesh is drawn over all other plots so only do this if fft is off )
 		before = time.perf_counter()
 		self._replot_selected_data()
 		log.debug(f"Replotting selected data took: {time.perf_counter() - before}")

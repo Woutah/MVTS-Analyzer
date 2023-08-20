@@ -5,8 +5,10 @@ This enables the use of multiple views with the same model.
 
 import io
 import logging
+import typing
 
 import matplotlib
+import matplotlib.dates
 import numpy as np
 import pandas as pd
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -14,12 +16,8 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from mvts_analyzer.graphing.graph_data import GraphData
 from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.graphing.graph_settings_view import GraphSettingsView
-from mvts_analyzer.utility import GuiUtility
-
-import typing
-
 from mvts_analyzer.graphing.plotter.plot_wrapper import QPlotter
-from mvts_analyzer.utility import DfUtility
+from mvts_analyzer.utility import DfUtility, GuiUtility
 from mvts_analyzer.widgets.datastructures import LimitedRange
 from mvts_analyzer.windows.load_type_selection_window import (
     DuplicatePolicy, LoadTypeSelectionDialog, MainLoadType)
@@ -309,7 +307,7 @@ class GraphSettingsController():
 		Args:
 			new_xaxis (str): Name of the new column to be used as x-axis
 		"""
-		if new_xaxis not in self.data_model._df :
+		if self.data_model._df is None or new_xaxis not in self.data_model._df:
 			# raise NameError(f"{new_axis_name}") #TODO: empty should be allowed
 			log.debug(f"Trying to set datamodel axis to {new_xaxis} but column was not found, resetting to ' '")
 			self.model.x_axis = ""
@@ -348,23 +346,28 @@ class GraphSettingsController():
 
 
 
-
+	@GuiUtility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Could not copy plot</b>")
 	def copy_plot_to_clipboard(self):
-		try:
-			with io.BytesIO() as buffer:
-				self.plotter.canvas.figure.savefig(buffer)
-				QtWidgets.QApplication.clipboard().setImage(QtGui.QImage.fromData(buffer.getvalue()))
-				log.debug("Succesfully copied current canvas to clipboard")
-		except Exception as err:
-			log.warning(f"Could not copy figure to clipboard: {err}")
-
+		"""Copy the current plot figure to the clipboard"""
+		with io.BytesIO() as buffer:
+			self.plotter.canvas.figure.savefig(buffer)
+			QtWidgets.QApplication.clipboard().setImage(QtGui.QImage.fromData(buffer.getvalue()))
+			log.debug("Succesfully copied current canvas to clipboard")
 
 	def append_df_popup(self, df : pd.DataFrame, dt_column_df = "DateTime"):
+		"""
+		Create popup to append dataframe from file
+		
+		Args:
+			df (pd.DataFrame): The dataframe to append
+			dt_column_df (str, optional): The name of the datetime column in the dataframe. Defaults to "DateTime".
+		
+		"""
 		log.info("Now validating and trying to append df ")
 
 		if not self.data_model.validate_df(df, inplace_try_fix=True):
-			log.warning(f"Error when validating dataframe... Could not append it.")
-			GuiUtility.create_qt_warningbox(f"Error when validating dataframe... Could not append it.", "Could not append data")
+			log.warning("Error when validating dataframe... Could not append it.")
+			GuiUtility.create_qt_warningbox("Error when validating dataframe... Could not append it.", "Could not append data")
 			return
 
 		if dt_column_df in df.columns: #If datetime specified
@@ -383,11 +386,6 @@ class GraphSettingsController():
 			log.warning("Cancelled append_df popup, discarding database and continuing...")
 			return
 
-
-
-		# fromtime = loadspecs.from_time.replace(tzinfo=local_timezone) #Assume filled time is local time
-		# totime = loadspecs.to_time.replace(tzinfo=local_timezone)
-
 		if dt_column_df in df.columns:
 			mask = (df[dt_column_df] >=  loadspecs.from_time) & (df[dt_column_df] <= loadspecs.to_time)
 			df = df[mask]
@@ -398,12 +396,13 @@ class GraphSettingsController():
 
 
 	def append_df_from_file(self):
+		"""Create popup to append dataframe from file"""
 		log.info("Now trying to append a df from file...")
 
-		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file',
-				self.data_model.file_source, "Pickled dataframes or Excel Sheets (*.pkl *.*, *.xlsx)")
+		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', #type: ignore
+				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl *.*, *.xlsx, *.csv)")
 		success, msg, df = DfUtility.load_dataframe_using_file_extension(fname[0])
-		if not success:
+		if not success or df is None:
 			GuiUtility.create_qt_warningbox(msg, "Error")
 			return
 
@@ -412,37 +411,31 @@ class GraphSettingsController():
 
 
 
-
+	@GuiUtility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Could not load dataframe</b>")
 	def load_df_popup(self):
 		"""
 		Show a popup to load a dataframe from file
 		"""
 		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', #type: ignore
-				self.data_model.file_source, "Pickled dataframes or Excel Sheets (*.pkl *.*, *.xlsx)")
-
-		try:
-			if len(fname[0]) == 0 or fname[0] is None:
-				#If nothing selected -> just return
-				return
-				
-			self.data_model.load_from_file(fname[0])
-		except Exception as ex:
-			GuiUtility.create_qt_warningbox(str(ex), "Error")
+				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl *.*, *.xlsx, *.csv)")
+		if len(fname[0]) == 0 or fname[0] is None:
+			#If nothing selected -> just return
 			return
+		self.data_model.load_from_file(fname[0])
 
 
 	def _save_df_base(self, fname : str, save_function : typing.Callable):
 		"""Base function for saving dataframes - takes in the filepath and save function and creates a warning box on failure
 
 		Args:
-			fname (str): The full file path where to save the file (includes the file extension)
-			save_function (callable): the function which will be called to save the dataframe. 
+			fname (str): The full file path where to save the file
+			save_function (callable): the function which will be called to save the dataframe.
 				Should be of form: [save_function(fname : str)] and should return a tuple with success and
 				a return message
 		"""
-		if fname is not None and len(fname[0]) > 0:
+		if fname is not None and len(fname) > 0:
 			log.info(f"Trying to save to path {fname}")
-			success, retval = save_function(fname[0])
+			success, retval = save_function(fname)
 			if not success:
 				GuiUtility.create_qt_warningbox(retval, "Error")
 		else:
@@ -456,13 +449,19 @@ class GraphSettingsController():
 		try:
 			curpath = self.data_model.file_source.rsplit("\\", 1)[0] + \
 				"\\"+ self.data_model.file_source.rsplit("\\")[-1].rsplit(".", 1)[0] + " - Copy.pkl"
-		except Exception as ex: #pylint: disable=broad-exception-caught
-			curpath = "."
+		except Exception: #pylint: disable=broad-exception-caught
+			log.warning("Could not set current path to save to, returning without saving...")
+			return
 		fname, _ = QtWidgets.QFileDialog.getSaveFileName(None, 'Save Location', #type: ignore
-			curpath, "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx)")
+			curpath, "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx);; Comma-Separated-Values (*.csv)")
 		self._save_df_base(fname=fname, save_function=self.data_model.save_df)
 
 	def save_df_selection_only_popup(self):
+		"""Create popup to save the currently selected datapoints only"""
+		if self.data_model._df is None:
+			log.warning("Could not save selection only, no dataframe loaded")
+			GuiUtility.create_qt_warningbox("Could not save selection, no dataframe loaded", "Warning")
+			return
 		percentage = 0
 		dflen = len(self.data_model._df)
 		if dflen != 0:
@@ -471,17 +470,22 @@ class GraphSettingsController():
 		fname, _ = QtWidgets.QFileDialog.getSaveFileName(None, 'Save selection', #type: ignore
 			self.data_model.file_source.rsplit("\\", 1)[0] + \
 				"\\"+ self.data_model.file_source.rsplit("\\")[-1].rsplit(".", 1)[0] + \
-				f" - Subselection ({percentage}%).pkl", "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx)")
+				f" - Subselection ({percentage}%).pkl", "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx);; Comma-Separated-Values (*.csv)")
 		self._save_df_base(fname=fname, save_function=self.data_model.save_df_selection)
 
 	def save_df_not_hidden_only_popup(self):
+		"""Create popup to save the non-hidden datapoints only"""
+		if self.data_model._df is None:
+			log.warning("Could not save selection only, no dataframe loaded")
+			GuiUtility.create_qt_warningbox("Could not save selection, no dataframe loaded", "Warning")
+			return
 		log.debug(self.data_model.file_source.rsplit("\\", 1)[0])
 		percentage = 0
 		dflen = len(self.data_model._df)
 		if dflen != 0:
 			percentage = int((dflen - len(self.data_model.hidden_datapoints)) / dflen * 100)
-		fname = QtWidgets.QFileDialog.getSaveFileName(None, 'Save Not-Hidden Datapoints Only',
-			self.data_model.file_source.rsplit("\\", 1)[0] + "\\"+ self.data_model.file_source.rsplit("\\")[-1].rsplit(".", 1)[0] + f" - Subselection ({percentage}%).pkl", "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx)")
+		fname, _ = QtWidgets.QFileDialog.getSaveFileName(None, 'Save Not-Hidden Datapoints Only', #type: ignore
+			self.data_model.file_source.rsplit("\\", 1)[0] + "\\"+ self.data_model.file_source.rsplit("\\")[-1].rsplit(".", 1)[0] + f" - Subselection ({percentage}%).pkl", "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx);; Comma-Separated-Values (*.csv)")
 		self._save_df_base(fname=fname, save_function=self.data_model.save_df_not_hidden_only)
 
 	def plotter_replot(self):
@@ -516,8 +520,10 @@ class GraphSettingsController():
 
 		#Set appropriate ranges
 		if self.model.fft_line_range is not None and self.model.fft_line_range.max_val is not None and self.model.fft_line_range.min_val is not None:
-			self.model.fft_line_range_left = type(self.model.fft_line_range.max_val) (self.model.fft_line_range.min_val + bottom * self.model.fft_line_range.max_val)
-			self.model.fft_line_range_right = type(self.model.fft_line_range.max_val) (self.model.fft_line_range.min_val + top * self.model.fft_line_range.max_val)
+			self.model.fft_line_range_left = \
+				type(self.model.fft_line_range.max_val) (self.model.fft_line_range.min_val + bottom * self.model.fft_line_range.max_val) #type:ignore
+			self.model.fft_line_range_right = \
+				type(self.model.fft_line_range.max_val) (self.model.fft_line_range.min_val + top * self.model.fft_line_range.max_val) #type:ignore
 
 
 	#=================================================================
@@ -525,9 +531,14 @@ class GraphSettingsController():
 	#=================================================================
 	#Update ranges in settings when dataframe changes
 	def process_data_label_columns_options(self): #If data label columns change
+		"""
+		Update the label column options in the model and view
+		"""
+		if self.data_model._df is None:
+
+			return
 
 		label_columns = self.data_model.get_lbl_columns()
-
 		#======= Plotted labels ======
 		self.view.plot_settings.inner_settings.plotted_labels_selection_list.set_options(label_columns) #Plotted label columns
 
@@ -554,20 +565,16 @@ class GraphSettingsController():
 		cb.addItems(plot_color_columns) #First set selection options
 		if self.model.plot_color_column not in plot_color_columns: #If plot color column not in option list -> try to select first usable column
 			if plot_color_columns is None or len(plot_color_columns) == 0:
-				self.model.plot_color_column = None #If no columns -> set to None
+				self.model.plot_color_column = "" #If no columns -> set to None
 			else:
 				self.model.plot_color_column = plot_color_columns[0] #Or to first available
 
 		cb.blockSignals(False)
 
-
-	# def process_model_plot_list_options(self):
-	# 	# print(f"now passing on {options} to view")
-	# 	log.debug(f"Setting column options to: {self.data_model.get_column_names()}")
-	# 	self.view.plot_settings.inner_settings.plot_selector_list.set_options(self.data_model.get_column_names())
-	# 	# combobox = self.view.plot_settings.inner_settings.plots1_combobox
-
 	def process_data_x_axis_options(self):
+		"""
+		Update the x-axis options based on the current dataframe
+		"""
 		cb = self.view.plot_settings.inner_settings.x_axis_combobox
 		log.debug(f"Setting view x-axis options to {self.data_model.get_column_names()}")
 		cols = self.data_model.get_column_names()
@@ -579,29 +586,25 @@ class GraphSettingsController():
 
 
 	def process_data_dfChanged(self): #TODO: create more specialized dfChanged methods (e.g. columnsChanged, labelColumnsChanged etc. )
-		log.info(f"Now updating settings using data from changed df")
+		"""
+		Updates all settings relating to the dataframe contents, is called when dataframe is changed.
+		"""
+		log.info("Now updating settings using data from changed df")
 
 		#========== FFT ===========
 		fft_columns = self.data_model.get_fft_columns()
 		log.debug(f"FFT columns : {fft_columns}")
 		if self.model.fft_column is not None and self.model.fft_column != "" and self.model.fft_column not in fft_columns.keys():
-			self.model.fft_column = None #Reset fft column if it does not exist in new data
-
-		# self.model.fft_line_range = self.data_model.update_fft_line_range(self.model.fft_column)
+			# self.model.fft_column = None #Reset fft column if it does not exist in new data
+			self.model.fft_line_range = LimitedRange()
 		try:
-			linecount = fft_columns[self.model.fft_column]
-			# self.model.fft_line_range.find_bounded(0, linecount)
-			# self.model.fft_line_range.max_val = linecount
-			# self.model.fft_line_range.min_val = 0
+			linecount = fft_columns[self.model.fft_column] #type: ignore
 			self.model.fft_line_range = LimitedRange(
 				0, linecount, self.model.fft_line_range.left_val, self.model.fft_line_range.right_val
 			)
-			# self.model.fft_line_range_left = 0
-			# self.model.fft_line_range_right = linecount
 
-		except KeyError as exe: #If bounds unknown
+		except KeyError: #If bounds unknown
 			self.model.fft_line_range = LimitedRange()
-			pass
 
 		#========== Plotcolumns ===========
 		all_cols = self.data_model.get_column_names()
@@ -624,7 +627,7 @@ class GraphSettingsController():
 		#=========== x-axis =========
 		self.process_data_x_axis_options()
 
-		if self.model.x_axis not in list(self.data_model.get_column_names()): #Reset X_axis if it does not exist in new column list
+		if self.model.x_axis not in list(self.data_model.get_column_names()): #Reset X_axis if it does not exist
 			log.debug("Changing x-axis...")
 			if self.model._default_x_axis not in list(self.data_model.get_column_names()):
 				self.model.x_axis = None
@@ -637,16 +640,7 @@ class GraphSettingsController():
 		if self.model.plot_domain_left == self.model.plot_domain_right:  #If new range does not overlap with old range -> set to min/max of new
 			self.model.plot_domain_left = new_x_limrange.min_val
 			self.model.plot_domain_right = new_x_limrange.max_val
-		# self.model._plot_dom
-
-
-		# self.process_labeler_columnOptionChanged(labeling_options)
-
 		self.process_data_label_columns_options()
-
-		# self.view.plot_settings.inner_settings.plot_colors_column_ComboBox.set_options(newlabelist)
-
-		#============== Update everything ===========
 		self.view_reload()
 
 
@@ -708,7 +702,7 @@ class GraphSettingsController():
 		Process the model change in fft column
 		"""
 		combo_box = self.view.plot_settings.inner_settings.fft_column_combobox
-		combo_box.setCurrentText(self.model.fft_column)
+		combo_box.setCurrentText(self.model.fft_column if self.model.fft_column is not None else "")
 
 	def process_model_fft_line_range(self):
 		"""
@@ -798,51 +792,35 @@ class GraphSettingsController():
 			plotted_columns, reset_boxcount=False)
 
 
-	# def process_model_file_source(self):
-		# self.view.plot_settings.inner_settings.file_source_selector.set_cur_path(self.data_model.file_source)
 
-
-	# def process_model_dfChanged(self):
-	# 	log.debug("Df changed")
-	# 	self.labeler_window_view.col_dropdown.set_options(list(set(self.data_model.get_lbl_columns() + self.model.label_column_presets))) #Set label column options
-
-	# 	self.process_labeler_columnOptionChanged(self.labeler_window_view.col_dropdown.selection)#Also update possible columns
-	# 	# self.process_model_plo
-	# 	self.process_model_label_plotting_options()
-	# 	self.process_model_x_axis_options()
 
 	def process_model_plot_type(self):
+		"""
+		Model --> View
+		Process the plot-type change
+		"""
 		self.view.plot_settings.inner_settings.plot_type_combobox.setCurrentText(self.model._plot_type)
 		# if self.df.dtypes[x_ax] ==
 		log.debug(f"Setting plotting type to: {self.model._plot_type}")
 
 
 	def process_model_x_axis(self):
+		"""
+		Model --> View
+		Process the x-axis change
+		"""
 		log.debug(f"Setting current xaxis text to: {self.model.x_axis}")
 		cb = self.view.plot_settings.inner_settings.x_axis_combobox
 		cb.blockSignals(True)
 		cb.setCurrentText(self.model.x_axis)
 		cb.blockSignals(False)
-		# if self.df.dtypes[x_ax] ==
 
-		# cols = self.data_model._df.columns if is None : [] ? columns
-		# self.view.plot_settings.inner_settings.x_axis.set = self.data_model.get_column_names()
-
-		# log.debug(f"Setting plot view x-axis to: {x_ax}")
-		# if pd.api.types.is_string_dtype(self.model.df[x_ax]):
-		# 	raise NotImplementedError("Can't handle x-axis of type string")
-		# elif pd.api.types.is_numeric_dtype(self.model.df[x_ax]):
-		# 	raise NotImplementedError("Can't handle x-axis of type numeric")
-		# elif pd.api.types.is_datetime64_any_dtype(self.model.df[x_ax]):
-		# 	print("Now selecting x_axis of type datetime")
-		# else:
-		# 	raise NotImplementedError(f"Can't handle x-axis of type {type(self.model.df[x_ax])}")
-		# self.view.v
-
-
-	# def process_model_label_column_options(self):
 
 	def process_model_fft_column_options(self):
+		"""
+		Model --> View
+		Process the fft column options change
+		"""
 		fft_cols_lines = self.data_model.get_fft_columns()
 
 		cb = self.view.plot_settings.inner_settings.fft_column_combobox
@@ -853,26 +831,37 @@ class GraphSettingsController():
 		cb.blockSignals(False)
 
 	def process_model_plotColorMethod(self, color_method : str, color_column : str) -> None:
+		"""
+		Model --> View
+		On plot-color method change.
+		"""
 		inner = self.view.plot_settings.inner_settings
 		inner.plot_colors_method_ComboBox.setCurrentText(color_method)
 		inner.plot_colors_column_ComboBox.setCurrentText(color_column)
 
 	def process_model_selectionGapFillMs(self) -> None:
+		"""
+		Model --> View
+		On selection gap fill change.
+		"""
 		slider_box_widget = self.view.plot_settings.inner_settings.plot_select_gapfill_slider_with_box
 		slider_box_widget.set_all(self.model._selection_gap_fill_ms_limval) #TODO: prive, not very neat --> unprivate?
 
 
 	#================================ Combination events ====================================
-	def process_model_dfColumnsChanged(self): #When column changes
-		self.process_model_x_axis_options()
-
 
 
 	def reset_plot_settings(self):
+		"""
+		Reset all plot settings to default
+		"""
 		self.model.reset_all_settings_to_default()
 		self.process_data_dfChanged()
 
 	def reset_plot_domain(self):
+		"""
+		Reset the plot domain to the default
+		"""
 		self.model.plot_domain_left = self.model.plot_domain_limrange.min_val
 		self.model.plot_domain_right = self.model.plot_domain_limrange.max_val
 
@@ -884,32 +873,14 @@ class GraphSettingsController():
 	#===========Staticmethods ============
 	#=====================================
 	@staticmethod
-	def open_view_window( graph_data_model : GraphData = None, graph_settings_model : GraphSettingsModel = None, parent : QtCore.QObject= None):
+	def open_view_window(
+			graph_data_model : GraphData,
+			graph_settings_model : GraphSettingsModel,
+			parent : QtWidgets.QWidget
+		):
+		"""
+		Open a new view window with the current graph data and settings models
+		"""
 		new_win = GraphSettingsViewWindow(graph_data_model, graph_settings_model, parent=parent)
 		new_win.show()
 		return new_win
-
-
-
-
-	# 	assert(graph_settings_model is None or type(graph_settings_model) == type(GraphSettingsModel))
-	# 	self.view_window = QtWidgets.QMainWindow(self)
-	# 	r = QtGui.QGuiApplication.primaryScreen().geometry()
-	# 	r.setSize(QtCore.QSize( 0.6* r.width(),0.6* r.height()))
-	# 	self.view_window.setGeometry(r)
-
-	# 	graph_settings_model = GraphSettingsModel()
-	# 	if graph_settings_model is not None:
-	# 		graph_settings_model.copy_attrs(self.graph_settings_model)
-	# 		# graph_settings_model = GraphSettingsView(plotter) # Create View (using created plotter)
-	# 		# graph_settings. =
-	# 	# graph_data_model = GraphData(**graph_model_args)
-	# 	plotter = QPlotter(self.graph_data_model, graph_settings_model)
-	# 	graph_view = GraphSettingsView(plotter) #Create model
-	# 	graph_controller = GraphSettingsController(self.graph_data_model, graph_settings_model, graph_view, plotter)
-	# 	self.view_window.setCentralWidget(graph_view)
-	# 	self.view_window.show()
-	# 	self.view_window.onde
-
-	# 	return graph_settings_model, graph_view, plotter
-

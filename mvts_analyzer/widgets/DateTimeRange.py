@@ -123,7 +123,8 @@ class DateTimeRange(QtWidgets.QWidget):
 		self.blockSignals(False)
 
 	def _boxes_changed(self, x=None):
-		left, right = self.text_boxes[0].dateTime().toPyDateTime(), self.text_boxes[1].dateTime().toPyDateTime()
+		left, right = self.text_boxes[0].dateTime().toPython(), self.text_boxes[1].dateTime().toPython()
+
 
 		log.debug(f"Boxes changed to: {left} {right}")
 		if self._enforce_limits:

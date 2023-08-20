@@ -19,12 +19,16 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QHBoxLayout,
     QLabel, QLayout, QMainWindow, QMenuBar,
     QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
     QVBoxLayout, QWidget)
+import mvts_analyzer.res.app_resources_rc
 
 class Ui_MergeColumnWindow(object):
     def setupUi(self, MergeColumnWindow):
         if not MergeColumnWindow.objectName():
             MergeColumnWindow.setObjectName(u"MergeColumnWindow")
-        MergeColumnWindow.resize(821, 248)
+        MergeColumnWindow.resize(1016, 261)
+        icon = QIcon()
+        icon.addFile(u":/Icons/icons/Tango Icons/actions/go-down.svg", QSize(), QIcon.Normal, QIcon.Off)
+        MergeColumnWindow.setWindowIcon(icon)
         self.centralwidget = QWidget(MergeColumnWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
@@ -38,10 +42,6 @@ class Ui_MergeColumnWindow(object):
         self.verticalLayout_3 = QVBoxLayout()
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setSizeConstraint(QLayout.SetMinimumSize)
-        self.verticalSpacer_2 = QSpacerItem(20, 0, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
-
-        self.verticalLayout_3.addItem(self.verticalSpacer_2)
-
         self.returnMsgLabel = QLabel(self.centralwidget)
         self.returnMsgLabel.setObjectName(u"returnMsgLabel")
         self.returnMsgLabel.setEnabled(False)
@@ -160,7 +160,7 @@ class Ui_MergeColumnWindow(object):
         self.menubar = QMenuBar(MergeColumnWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setEnabled(False)
-        self.menubar.setGeometry(QRect(0, 0, 821, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1016, 22))
         MergeColumnWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MergeColumnWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -173,7 +173,7 @@ class Ui_MergeColumnWindow(object):
     # setupUi
 
     def retranslateUi(self, MergeColumnWindow):
-        MergeColumnWindow.setWindowTitle(QCoreApplication.translate("MergeColumnWindow", u"Merge Label Columns", None))
+        MergeColumnWindow.setWindowTitle(QCoreApplication.translate("MergeColumnWindow", u"Column Editor", None))
         self.returnMsgLabel.setText("")
         self.label.setText(QCoreApplication.translate("MergeColumnWindow", u"Source Column:", None))
 #if QT_CONFIG(tooltip)

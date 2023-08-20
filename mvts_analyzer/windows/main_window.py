@@ -10,7 +10,6 @@ import traceback
 
 import matplotlib
 from PySide6 import QtCore, QtGui, QtWidgets
-from res.Paths import Paths
 
 from mvts_analyzer.graphing.graph_data import GraphData
 from mvts_analyzer.graphing.graph_settings_controller import \
@@ -18,6 +17,7 @@ from mvts_analyzer.graphing.graph_settings_controller import \
 from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.graphing.graph_settings_view import GraphSettingsView
 from mvts_analyzer.graphing.plotter.plot_wrapper import QPlotter
+from mvts_analyzer.res.Paths import Paths
 from mvts_analyzer.ui.main_window_ui import Ui_MainWindow
 from mvts_analyzer.utility.GuiUtility import create_qt_warningbox
 from mvts_analyzer.windows.apply_python_window import ApplyPythonWindow
@@ -28,6 +28,7 @@ matplotlib.use('Qt5Agg')
 log = logging.getLogger(__name__)
 
 class MainWindow(QtWidgets.QMainWindow):
+	"""The main window from which all the other windows can be accessed"""
 	def __init__(self, graph_model_args = {}, *args, **kwargs):
 		super(MainWindow, self).__init__(*args, **kwargs)
 		log.debug("Initializing main window")
@@ -71,7 +72,6 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.ui.actionAppend_From_File.triggered.connect(self.graph_controller.append_df_from_file)
 		self.ui.actionOpenMergeLabelColumnWindow.triggered.connect(self.open_merge_label_column_window)
 		self.ui.actionOpen_View_Copy.triggered.connect(lambda x: self.open_view_copy())
-		self.ui.actionLive_Window.triggered.connect(lambda x: self.open_live_window())
 
 
 		self.ui.actionHide_All_But_Selection.triggered.connect(self.graph_data_model.hide_all_datapoints_except_selection)
@@ -99,8 +99,12 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.recreate_python_appliable_menu()
 
 
-	def _rec_repopulate_python_appliable_menu(self, cur_path : str, cur_depth : int, cur_menu : QtWidgets.QMenu, max_depth : int = -1) -> None:
-
+	def _rec_repopulate_python_appliable_menu(self,
+				cur_path : str,
+				cur_depth : int,
+				cur_menu : QtWidgets.QMenu,
+				max_depth : int = -1
+			) -> None:
 		if cur_depth > max_depth and max_depth != -1:
 			return
 		log.debug(f"Currently at {cur_path}")
@@ -109,8 +113,6 @@ class MainWindow(QtWidgets.QMainWindow):
 			if os.path.isdir(path) and cur_item != "__pycache__": #Skip __pycache__ folder
 				new_menu = QtWidgets.QMenu(cur_menu) #Folder = Action menu
 				new_menu.setTitle(cur_item)
-				action = new_menu.menuAction()
-				# self.menu_actions.append()
 				self._rec_repopulate_python_appliable_menu(os.path.join(cur_path, cur_item), cur_depth=cur_depth+1, cur_menu=new_menu)
 				cur_menu.addAction(new_menu.menuAction())
 			else:
@@ -125,6 +127,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 	def recreate_python_appliable_menu(self):
+		"""Reloads the python appliable menu based on the selected folder"""
 		appliables_dir = Paths.DatabasePythonDefaultAppliablesPath
 		self.menu_actions = []
 		self.ui.menuPython_File.clear()
@@ -141,28 +144,32 @@ class MainWindow(QtWidgets.QMainWindow):
 			log.error(f"Error when repopulating appliables: {ex}")
 
 
-	def run_python_appliable(self, path, name):
+	def run_python_appliable(self, path):
+		"""Run a python appliable """
 		try:
-			spec = importlib.util.spec_from_file_location("newmodule", path)
+			spec = importlib.util.spec_from_file_location("newmodule", path) #Reload module each time
+			if spec is None:
+				raise Exception("Could not load spec of module.")
 			module = importlib.util.module_from_spec(spec)
 			# sys.modules["LoadedModule"] = module
-			spec.loader.exec_module(module)
+			spec.loader.exec_module(module) #type: ignore
 
 			# module = importlib.import_module(f"Operations.DefaultPythonAppliables.{name}")
 			# importlib.reload(module)
 			module.apply(self.graph_data_model, self.graph_settings_model, self)
-		except Exception as ex:
+		except Exception as ex: #pylint: disable=broad-exception-caught
 			msg = f"Error during execution of appliable: {ex}"
 			log.warning(msg)
-			create_qt_warningbox(f"{msg} \n\n {traceback.format_exc()}", "Error during executiong")
+			create_qt_warningbox(f"{msg} \n\n {traceback.format_exc()}", "Error during execution")
 			log.warning(traceback.format_exc())
 
 
 
 	def execute_python_executable(self, path):
+		"""Execute a python file as an executable in this context"""
 		code = None
 		try:
-			with open(path) as pythonfile:
+			with open(path, encoding="utf-8") as pythonfile:
 				code = pythonfile.read() #Load pythonfile
 		except FileNotFoundError:
 			create_qt_warningbox("File not found", f"Could not find file {path}")
@@ -179,46 +186,63 @@ class MainWindow(QtWidgets.QMainWindow):
 			msgbox.setIcon(QtWidgets.QMessageBox.Icon.Information)
 
 	def open_view_copy(self, graph_settings_model = None):
+		"""Open a copy of the current view in a new window"""
 		assert(graph_settings_model is None or type(graph_settings_model) == type(GraphSettingsModel))
 
 		new_settings = GraphSettingsModel()
 		new_settings.copy_attrs(self.graph_settings_model)
 
 
-		new_view = self.graph_controller.open_view_window(self.graph_data_model, graph_settings_model=new_settings)
+		new_view = self.graph_controller.open_view_window(
+			self.graph_data_model,
+			graph_settings_model=new_settings,
+			parent=self	
+		)
 		self.graph_view_windows.append(new_view)
 
 		# self.view_window = QtWidgets.QMainWindow(self)
 		r = QtGui.QGuiApplication.primaryScreen().geometry()
-		r.setSize(QtCore.QSize( 0.7* r.width(),0.7* r.height()))
+		r.setSize(QtCore.QSize( int(0.7* r.width()),int(0.7* r.height())))
 		new_view.setGeometry(r)
 
-		qtRectangle = new_view.frameGeometry()
-		centerPoint = QtWidgets.QDesktopWidget().availableGeometry().center()
-		qtRectangle.moveCenter(centerPoint)
-		new_view.move(qtRectangle.topLeft())
+		qt_rect = new_view.frameGeometry()
+		cent_point = QtGui.QGuiApplication.primaryScreen().geometry().center()
+		qt_rect.moveCenter(cent_point)
+		new_view.move(qt_rect.topLeft())
 		new_view.show()
 
 
 
 
 	def open_label_rename_window(self):
+		"""Opens the label renaming tool-window"""
 		log.info("Opening renaming tool")
 		if self.label_rename_window:
 			log.info("Window already exists")
-			self.open_label_rename_window.show()
-			self.open_label_rename_window.activateWindow()
+			self.label_rename_window.window.setHidden(False)
+			self.label_rename_window.window.show()
+			# self.label_rename_window.window.activateWindow()
+			self.label_rename_window.window.raise_()
+			#Unminimize
+			self.label_rename_window.window.setWindowState(
+				self.label_rename_window.window.windowState()
+				& ~QtCore.Qt.WindowState.WindowMinimized
+				| QtCore.Qt.WindowState.WindowActive)
 		else:
-			self.open_label_rename_window = RenameLabelWindow(self.graph_data_model, parent=self)
+			self.label_rename_window = RenameLabelWindow(self.graph_data_model, parent=self)
 
 	def open_merge_label_column_window(self):
+		"""Opens the label merging tool-window"""
 		log.info("Opening column merging tool")
 		if self.label_column_merge_tool:
 			log.info("Window already exists")
 			self.label_column_merge_tool.window.setHidden(False)
 			self.label_column_merge_tool.window.show()
-			self.label_column_merge_tool.window.activateWindow()
 			self.label_column_merge_tool.window.raise_()
+			self.label_column_merge_tool.window.setWindowState(
+				self.label_column_merge_tool.window.windowState()
+				& ~QtCore.Qt.WindowState.WindowMinimized
+				| QtCore.Qt.WindowState.WindowActive)
 		else:
 			self.label_column_merge_tool = MergeColumnWindow(self.graph_data_model, parent=self)
 
@@ -236,8 +260,11 @@ class MainWindow(QtWidgets.QMainWindow):
 			log.info("Winodw already exists?")
 			self.apply_python_window.setHidden(False)
 			self.apply_python_window.show()
-			self.apply_python_window.activateWindow()
 			self.apply_python_window.raise_()
+			self.apply_python_window.setWindowState(
+				self.apply_python_window.windowState()
+				& ~QtCore.Qt.WindowState.WindowMinimized
+				| QtCore.Qt.WindowState.WindowActive)
 		else:
 			self.apply_python_window = ApplyPythonWindow(self.graph_data_model, parent=self)
 

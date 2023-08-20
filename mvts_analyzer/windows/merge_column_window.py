@@ -4,9 +4,7 @@ import typing
 from PySide6 import QtCore, QtWidgets
 
 from mvts_analyzer.graphing.graph_data import GraphData
-from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.ui.merge_column_window_ui import Ui_MergeColumnWindow
-from mvts_analyzer.widgets.dropdown_add_option import DropdownAddOption
 
 log = logging.getLogger(__name__)
 
@@ -58,7 +56,7 @@ class MergeColumnWindow():
 
 		log.info(f"Trying to merge {src} -> {dest}		Mode={mergemode}, preserving={preserve}")
 
-		success, msg = self.data_model.merge_columns(src, dest, mergemode, preserve, target_type=astype)
+		success, msg = self.data_model.merge_columns(src, dest, mergemode, preserve, astype=astype)
 
 		self.effect = QtWidgets.QGraphicsOpacityEffect()
 		self.animation = QtCore.QPropertyAnimation(self.effect, b"opacity")
