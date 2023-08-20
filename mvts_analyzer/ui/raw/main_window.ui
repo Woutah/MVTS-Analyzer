@@ -240,25 +240,6 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
-  <action name="actionLoad_CES_Network">
-   <property name="text">
-    <string>Load From CES (Network)</string>
-   </property>
-   <property name="toolTip">
-    <string>Load CES over network, use load from SQL whenever possible as that function is faster</string>
-   </property>
-  </action>
-  <action name="actionLoad_CES_Local_SQL">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Load From CES (Local SQL)</string>
-   </property>
-   <property name="toolTip">
-    <string>Load CES data from local SQL database (is preferred over via network in most cases)</string>
-   </property>
-  </action>
   <action name="actionLive_Window">
    <property name="enabled">
     <bool>true</bool>

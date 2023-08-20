@@ -170,8 +170,8 @@ class DateTimeRange(QtWidgets.QWidget):
 		# log.debug(f"Set box limits to {self.text_boxes[0].minimumDateTime()} -> {self.text_boxes[0].maximumDateTime()} &  {self.text_boxes[1].minimumDateTime()} -> {self.text_boxes[1].maximumDateTime()}")
 
 
-	def get_date_time(self):
-		curdate = [self._limited_range.left_val, self._limited_range.right_val]
+	def get_date_time(self) -> tuple[datetime.datetime | None, datetime.datetime | None]:
+		curdate = (self._limited_range.left_val, self._limited_range.right_val)
 		return curdate
 	
 	def set_all(self, limited_range : datastructures.LimitedRange):

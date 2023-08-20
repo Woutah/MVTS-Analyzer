@@ -1,13 +1,11 @@
 import copy  # Copy limitedrange
 import logging
-from pydoc import locate
+import typing
 
 from PySide6 import QtCore, QtWidgets
 
 from mvts_analyzer.utility import GuiUtility
 from mvts_analyzer.widgets.datastructures import LimitedValue
-
-from .range_slider import QRangeSlider
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +22,14 @@ class RangeSliderWithBox(QtWidgets.QWidget):
 
 	valueEdited = QtCore.Signal(object)
 
-	def __init__(self, limited_value = LimitedValue(), text_converter = str, text_parser = int, reset_on_parse_fail = False, *args, **kwargs):
+	def __init__(self, 
+	      	limited_value = LimitedValue(),
+			text_converter = str,
+			text_parser : typing.Callable= int,
+			reset_on_parse_fail = False,
+			*args,
+			**kwargs
+		):
 		super(RangeSliderWithBox, self).__init__(*args, **kwargs)
 
 		self._layout = QtWidgets.QHBoxLayout(self)

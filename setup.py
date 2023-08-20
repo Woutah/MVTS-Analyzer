@@ -13,6 +13,14 @@ setup(
     url="https://github.com/Woutah/MVTS-Analyzer",
     license="LGPLv2",
     include_package_data=True,
+    entry_points={
+        'console_scripts': [
+            'MVTS-Analyzer=mvts_analyzer.main:main',
+            'mvts-analyzer=mvts_analyzer.main:main',
+            'mvtsa=mvts_analyzer.main:main'
+		],
+	}
+	
     # install_requires=[ #Generated using pipreqs
     #     'PySide6>=6.0.0', # Qt for Python, works for 6.5.1.1
     #     'pathos>=0.3.0', #Works for 0.3.0
