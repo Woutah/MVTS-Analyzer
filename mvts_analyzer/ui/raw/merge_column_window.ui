@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Merge Label Columns</string>
+   <string>Column Editor</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../../res/app_resources.qrc">
+    <normaloff>:/Icons/icons/Tango Icons/actions/go-down.svg</normaloff>:/Icons/icons/Tango Icons/actions/go-down.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
@@ -224,6 +228,8 @@
    </property>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../res/app_resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -108,27 +108,6 @@ class RangeSlidersWithBoxes(QtWidgets.QWidget):
 
 		self._slider.blockSignals(False)
 
-	# def _update_slider(self):
-	# 	self.blockSignals(True)
-	# 	self._slider.blockSignals(True)
-	# 	if self._limited_range is None or self._limited_range.max_val is None or self._limited_range.min_val is None:
-	# 		self._slider.setRange(0, 100)
-
-	# 	else:
-	# 		left = (self._limited_range.left_val - self._limited_range.min_val )* 100.0/ (self._limited_range.max_val - self._limited_range.min_val) 
-	# 		right = (self._limited_range.right_val - self._limited_range.min_val )  * 100.0 / (self._limited_range.max_val - self._limited_range.min_val)
-	# 		# if self._round_decimals >= 0:
-	# 		left = int(left)
-	# 		right= int(right)
-	# 		# left = round(left, self._round_decimals)
-	# 		# right = round(right, self._round_decimals)
-			
-	# 		# print(f"left/right: {left}, {right}")
-	# 		# if self._slider.
-	# 		self._slider.setRange(left, right)
-
-	# 	self._slider.blockSignals(False)
-	# 	self.blockSignals(False)
 
 	def _update_boxes(self):
 		# self.blockSignals(True)

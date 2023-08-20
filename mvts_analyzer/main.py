@@ -3,19 +3,15 @@ The main entry point - we launch the app from here (optionally with arguments)
 """
 
 import logging
+
 # from mvts_analyzer.utility.
 log = logging.getLogger(__name__)
-from res.Paths import Paths
-#================= GUI ===========================
-# from mvts_analyzer.windows.MainWindow import MainWindow
-from mvts_analyzer.windows.main_window import MainWindow
-from PySide6 import QtGui, QtWidgets
-import argparse 
+import argparse
+
 import matplotlib.pyplot as plt
-# from PySide6.QtWidgets import
-
-
-#
+from PySide6 import QtGui, QtWidgets
+from res.Paths import Paths
+from mvts_analyzer.windows.main_window import MainWindow
 
 if __name__ == "__main__":
 	import sys
@@ -82,6 +78,3 @@ if __name__ == "__main__":
 
 	log.info("Reached end of main, exiting...")
 	print("Done!")
-	# import sys, traceback, threading
-	# thread_names = {t.ident: t.name for t in threading.enumerate()}
-	# log.debug(f"Running threads at end: {thread_names} - {sys._current_frames()}")

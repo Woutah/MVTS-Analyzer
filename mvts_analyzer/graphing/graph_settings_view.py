@@ -1,38 +1,18 @@
-#==================================
-#
-#=================================
-
-
-from ctypes import util
 import logging
+from mvts_analyzer.widgets.collapsible_groupbox import \
+    CollapsibleGroupBoxLayout
 
-import matplotlib.pyplot as plt
-
-from mvts_analyzer.widgets.collapsible_groupbox import CollapsibleGroupBoxLayout
-# from mvts_analyzer.windows.config.configuration import Configuration, SettingEntry
-
-log = logging.getLogger(__name__)
-# from mvts_analyzer.windows.config import (  # TODO: rename configuration to setting_layout or something?
-#     conf_base, config_gui, configuration, utility)
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from PySide6 import QtCore, QtGui, QtWidgets
-#Import QStandardItemModel and QStandardItem
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFont
-from mvts_analyzer.widgets import DateTimeRange, combobox_list, range_slider_with_box, range_sliders_with_boxes, file_selector, widget_list, variable_range
-from mvts_analyzer.widgets import datastructures
+
 from mvts_analyzer.graphing.plotter.plot_wrapper import QPlotter
-from mvts_analyzer.windows.labeler_window import LabelerWindowView
 # import Utility.GeneralUtility as GeneralUtility
 from mvts_analyzer.utility import GeneralUtility
+from mvts_analyzer.widgets import (DateTimeRange, combobox_list,
+                                   range_slider_with_box,
+                                   range_sliders_with_boxes, variable_range)
+from mvts_analyzer.windows.labeler_window import LabelerWindowView
 
-# #==================
-# #Main layout of the graph tab configuration
-# #==================
-import typing
-
-
-
+log = logging.getLogger(__name__)
 
 class PlotSettingsInnerView(QtWidgets.QTreeWidget):
 	"""
@@ -320,17 +300,16 @@ class PlotSettings(QtWidgets.QWidget):
 		self.update_button = QtWidgets.QPushButton(text="Update")
 		# self.update_button.clicked.connect(self.on_update_click)
 		self.update_button.clicked.connect(self.updateSignal)
-		self.update_button.setIcon(QtGui.QIcon(GeneralUtility.get_full_path("./res/icons/replotsymbol.png")))
-
+		
+		#, QtCore.QSize(), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+		self.update_button.setIcon(QtGui.QIcon(":/Icons/icons/Tango Icons/actions/view-refresh.svg"))
 		self.replot_view_button = QtWidgets.QPushButton(text="Replot View (X)")
-		# self.replot_view_button.clicked.connect(self.on_replot_view_click)
 		self.replot_view_button.clicked.connect(self.replotViewSignal)
-		self.replot_view_button.setIcon(QtGui.QIcon(GeneralUtility.get_full_path("./res/icons/toview.png")))
+		self.replot_view_button.setIcon(QtGui.QIcon(":/Icons/icons/Custom Icons/toview.svg"))
 
 		self.fft_zoom_button = QtWidgets.QPushButton(text="Replot View (Vertical range FFT)")
-		# self.fft_zoom_button.clicked.connect(self.on_reset_view_click)
 		self.fft_zoom_button.clicked.connect(self.fftZoomViewSignal)
-		self.fft_zoom_button.setIcon(QtGui.QIcon(GeneralUtility.get_full_path("./res/icons/fftview.png")))
+		self.fft_zoom_button.setIcon(QtGui.QIcon(":/Icons/icons/Custom Icons/fftview.svg"))
 
 		self.sub_btn_layout = QtWidgets.QHBoxLayout()
 		self.btn_layout = QtWidgets.QVBoxLayout()
@@ -340,24 +319,8 @@ class PlotSettings(QtWidgets.QWidget):
 		
 		self.btn_layout.addLayout(self.sub_btn_layout)
 		self.btn_layout.addWidget(self.update_button)
-		#=================Top-buttons ==========
-		# self.save_df_btn = QtWidgets.QPushButton(text="Save Database")
-		# # self.save_df_btn.clicked.connect(lambda: self.plot_data.config.to_file("./test.conf")) #Create configuration save button
-		# self.save_df_btn.clicked.connect(self.saveDfSignal)
-		# self.save_df_btn.setIcon(QtGui.QIcon(utility.get_full_path("./res/icons/savesymbol.png")))
-
-		# self.reload_ces_df_btn = QtWidgets.QPushButton(text="Load CES Database")
-		# # self.reload_ces_df_btn.clicked.connect(lambda: self.plot_data.config.to_file("./test.conf")) #Create configuration save button
-		# self.reload_ces_df_btn.clicked.connect(self.reloadDfFromCESSignal)
-		# self.reload_ces_df_btn.setIcon(QtGui.QIcon(utility.get_full_path("./res/icons/reloadsymbol.png")))
-
-		
-		# self.top_btn_layout = QtWidgets.QHBoxLayout()
-		# self.top_btn_layout.addWidget(self.reload_ces_df_btn)
-		# self.top_btn_layout.addWidget(self.save_df_btn)
 
 		#===========Adding everything to layout===========
-		# self.settings_layout.addLayout(self.top_btn_layout)
 		self.settings_layout.addWidget(self.inner_settings) 
 		self.settings_layout.addWidget(self.labeler_groupbox)
 		self.settings_layout.addLayout(self.btn_layout)

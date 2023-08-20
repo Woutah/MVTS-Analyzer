@@ -1,13 +1,9 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from pickle import APPEND
-from PySide6 import QtCore, QtGui, QtWidgets
-from mvts_analyzer.widgets.dict_editor import DictEditor, DualBox
-from mvts_analyzer.widgets.collapsible_groupbox import CollapsibleGroupBoxLayout
-from mvts_analyzer.widgets.widget_list import ListBox, ListTextboxAndList, ListWidgetList, ListBoxAndBox
+from PySide6 import QtCore, QtWidgets
 from mvts_analyzer.widgets.DateTimeRange import DateTimeRange
-from mvts_analyzer.widgets.datastructures import LimitedValue, LimitedRange
+from mvts_analyzer.widgets.datastructures import LimitedRange
 from enum import Enum
 
 import logging

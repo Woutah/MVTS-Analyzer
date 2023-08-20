@@ -1,16 +1,15 @@
-from PySide6 import QtWidgets, QtCore
-from mvts_analyzer.utility import GuiUtility
-from .range_slider import QRangeSlider
-from pydoc import locate
-import copy #Copy limitedrange
+import copy  # Copy limitedrange
 import logging
-log = logging.getLogger(__name__)
+from pydoc import locate
 
-from .double_slider import DoubleSlider
+from PySide6 import QtCore, QtWidgets
 
-from mvts_analyzer.widgets.datastructures import LimitedValue
 from mvts_analyzer.utility import GuiUtility
+from mvts_analyzer.widgets.datastructures import LimitedValue
 
+from .range_slider import QRangeSlider
+
+log = logging.getLogger(__name__)
 
 
 

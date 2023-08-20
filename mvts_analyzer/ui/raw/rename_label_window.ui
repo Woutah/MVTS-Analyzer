@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="../../res/app_resources.qrc">
-    <normaloff>:/Icons/icons/Custom Icons/label_rename_icon.png</normaloff>:/Icons/icons/Custom Icons/label_rename_icon.png</iconset>
+    <normaloff>:/Icons/icons/Custom Icons/label_rename_icon.svg</normaloff>:/Icons/icons/Custom Icons/label_rename_icon.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,1,0">

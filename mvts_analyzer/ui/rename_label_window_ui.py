@@ -17,13 +17,18 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QLabel,
     QLayout, QMainWindow, QMenuBar, QPushButton,
-    QSizePolicy, QStatusBar, QVBoxLayout, QWidget)
+    QSizePolicy, QSpacerItem, QStatusBar, QVBoxLayout,
+    QWidget)
+import mvts_analyzer.res.app_resources_rc
 
 class Ui_RenameLabelWindow(object):
     def setupUi(self, RenameLabelWindow):
         if not RenameLabelWindow.objectName():
             RenameLabelWindow.setObjectName(u"RenameLabelWindow")
-        RenameLabelWindow.resize(603, 255)
+        RenameLabelWindow.resize(719, 276)
+        icon = QIcon()
+        icon.addFile(u":/Icons/icons/Custom Icons/label_rename_icon.svg", QSize(), QIcon.Normal, QIcon.Off)
+        RenameLabelWindow.setWindowIcon(icon)
         self.centralwidget = QWidget(RenameLabelWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout_2 = QVBoxLayout(self.centralwidget)
@@ -71,8 +76,18 @@ class Ui_RenameLabelWindow(object):
 
         self.renameToVLayout.addWidget(self.toLabel)
 
+        self.toComboBox = QComboBox(self.centralwidget)
+        self.toComboBox.setObjectName(u"toComboBox")
+        self.toComboBox.setEditable(True)
+
+        self.renameToVLayout.addWidget(self.toComboBox)
+
 
         self.verticalLayout_2.addLayout(self.renameToVLayout)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_2.addItem(self.verticalSpacer)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setSpacing(6)
@@ -91,14 +106,12 @@ class Ui_RenameLabelWindow(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
-        self.verticalLayout_2.setStretch(1, 1)
-        self.verticalLayout_2.setStretch(2, 1)
         self.verticalLayout_2.setStretch(3, 1)
         RenameLabelWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(RenameLabelWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setEnabled(False)
-        self.menubar.setGeometry(QRect(0, 0, 603, 21))
+        self.menubar.setGeometry(QRect(0, 0, 719, 22))
         RenameLabelWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(RenameLabelWindow)
         self.statusbar.setObjectName(u"statusbar")
