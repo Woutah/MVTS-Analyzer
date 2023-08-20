@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>821</width>
-    <height>248</height>
+    <width>1016</width>
+    <height>261</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,22 +29,6 @@
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
       </property>
-      <item>
-       <spacer name="verticalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::MinimumExpanding</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>0</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
       <item>
        <widget class="QLabel" name="returnMsgLabel">
         <property name="enabled">
@@ -229,8 +213,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>821</width>
-     <height>21</height>
+     <width>1016</width>
+     <height>22</height>
     </rect>
    </property>
   </widget>

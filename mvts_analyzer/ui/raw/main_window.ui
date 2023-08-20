@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Data Analysis</string>
+   <string>MVTS-Analyzer</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/Icons/icons/mainwin.ico</normaloff>:/Icons/icons/mainwin.ico</iconset>
+   <iconset resource="../../res/app_resources.qrc">
+    <normaloff>:/Icons/app_icon_3d.png</normaloff>:/Icons/app_icon_3d.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
@@ -41,6 +41,10 @@
     <widget class="QMenu" name="menuPython_File2">
      <property name="title">
       <string>Apply</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../../res/app_resources.qrc">
+       <normaloff>:/Icons/icons/Custom Icons/execute_python.png</normaloff>:/Icons/icons/Custom Icons/execute_python.png</iconset>
      </property>
      <addaction name="actionApply_Python_File_None"/>
     </widget>
@@ -122,14 +126,8 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <widget class="QMenu" name="menuLabeler_2">
-     <property name="title">
-      <string>Labeler</string>
-     </property>
-     <addaction name="actionRename_Label"/>
-    </widget>
     <addaction name="actionOpenMergeLabelColumnWindow"/>
-    <addaction name="menuLabeler_2"/>
+    <addaction name="actionRename_Label"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -139,6 +137,10 @@
      <property name="title">
       <string>Update</string>
      </property>
+     <property name="icon">
+      <iconset resource="../../res/app_resources.qrc">
+       <normaloff>:/Icons/icons/Custom Icons/graph.ico</normaloff>:/Icons/icons/Custom Icons/graph.ico</iconset>
+     </property>
      <addaction name="actionReplot"/>
      <addaction name="actionReplot_View"/>
      <addaction name="actionReplot_View_FFT"/>
@@ -146,6 +148,10 @@
     <widget class="QMenu" name="menuReset">
      <property name="title">
       <string>Reset</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../../res/app_resources.qrc">
+       <normaloff>:/Icons/icons/Custom Icons/reset-view.png</normaloff>:/Icons/icons/Custom Icons/reset-view.png</iconset>
      </property>
      <addaction name="actionReset_Domain"/>
      <addaction name="actionReset_View_Settings"/>
@@ -302,17 +308,13 @@
     <string>Delete Label</string>
    </property>
   </action>
-  <action name="actionRename_Label">
-   <property name="text">
-    <string>Label Renamer</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+3</string>
-   </property>
-  </action>
   <action name="actionOpenMergeLabelColumnWindow">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Tango Icons/mimetypes/x-office-document-template.png</normaloff>:/Icons/icons/Tango Icons/mimetypes/x-office-document-template.png</iconset>
+   </property>
    <property name="text">
-    <string>Column Editor</string>
+    <string>Column Editor...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+2</string>
@@ -350,6 +352,10 @@
    </property>
   </action>
   <action name="actionOpen_View_Copy">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Tango Icons/apps/preferences-system-windows.png</normaloff>:/Icons/icons/Tango Icons/apps/preferences-system-windows.png</iconset>
+   </property>
    <property name="text">
     <string>Open copy...</string>
    </property>
@@ -429,6 +435,10 @@
    </property>
   </action>
   <action name="actionReplot">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Tango Icons/actions/view-refresh.png</normaloff>:/Icons/icons/Tango Icons/actions/view-refresh.png</iconset>
+   </property>
    <property name="text">
     <string>Replot</string>
    </property>
@@ -437,6 +447,10 @@
    </property>
   </action>
   <action name="actionReplot_View">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Custom Icons/toview.png</normaloff>:/Icons/icons/Custom Icons/toview.png</iconset>
+   </property>
    <property name="text">
     <string>Replot View</string>
    </property>
@@ -445,6 +459,10 @@
    </property>
   </action>
   <action name="actionReplot_View_FFT">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Custom Icons/fftview.png</normaloff>:/Icons/icons/Custom Icons/fftview.png</iconset>
+   </property>
    <property name="text">
     <string>Replot View FFT</string>
    </property>
@@ -460,16 +478,33 @@
    </property>
   </action>
   <action name="actionReset_View_Settings">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Custom Icons/reset-view.png</normaloff>:/Icons/icons/Custom Icons/reset-view.png</iconset>
+   </property>
    <property name="text">
     <string>Reset All View Settings</string>
    </property>
   </action>
   <action name="actionReset_Domain">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Custom Icons/toview.png</normaloff>:/Icons/icons/Custom Icons/toview.png</iconset>
+   </property>
    <property name="text">
     <string>Reset Domain</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+R</string>
+   </property>
+  </action>
+  <action name="actionRename_Label">
+   <property name="icon">
+    <iconset resource="../../res/app_resources.qrc">
+     <normaloff>:/Icons/icons/Custom Icons/label_rename_icon.png</normaloff>:/Icons/icons/Custom Icons/label_rename_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Label Editor...</string>
    </property>
   </action>
  </widget>
