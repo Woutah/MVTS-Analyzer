@@ -197,6 +197,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		self.menu_actions = []
 		self.ui.menuPython_File.clear()
+		self.ui.menuPython_File2.clear()
 		log.debug("Recreating python appliables thingy")
 
 
@@ -205,6 +206,8 @@ class MainWindow(QtWidgets.QMainWindow):
 				raise ValueError("No python appliables path set")
 			self._rec_repopulate_python_appliable_menu(
 				self._python_appliables_path, cur_depth=0, cur_menu=self.ui.menuPython_File)
+			self._rec_repopulate_python_appliable_menu(
+				self._python_appliables_path, cur_depth=0, cur_menu=self.ui.menuPython_File2)
 			self.ui.menuPython_File.addSeparator()
 		except Exception as ex: #pylint: disable=broad-except
 			log.error(f"Error when repopulating appliables: {ex}")
@@ -214,6 +217,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		icon = QtGui.QIcon(":/Icons/icons/Custom Icons/python-folder-open.svg")
 		set_folder_action.setIcon(icon)
 		self.ui.menuPython_File.addAction(set_folder_action)
+		self.ui.menuPython_File2.addAction(set_folder_action)
 
 
 		set_folder_action.triggered.connect(self.popup_set_python_appliables_folder)
@@ -221,6 +225,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		newaction = QtGui.QAction("Refresh")
 		self.menu_actions.append(newaction)
 		self.ui.menuPython_File.addAction(newaction)
+		self.ui.menuPython_File2.addAction(newaction)
 		icon = QtGui.QIcon(":/Icons/icons/Tango Icons/actions/view-refresh.svg")
 		newaction.setIcon(icon)
 		newaction.triggered.connect(self.recreate_python_appliable_menu)

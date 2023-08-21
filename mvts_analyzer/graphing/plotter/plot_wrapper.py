@@ -1032,7 +1032,6 @@ class QPlotter(QtWidgets.QWidget):
 		if self.settings_model.x_axis is None:
 			log.error("Replot failed: No x-axis selected")
 			raise PlotError("No x-axis selected")
-
 		if self.settings_model.plot_list is None or len(self.settings_model.plot_list) == 0:
 			if self.settings_model.plotted_labels_list is None or len(self.settings_model.plotted_labels_list) == 0:
 				log.error("Replot failed: No columns selected")

@@ -95,7 +95,11 @@ Or the short-hand version:
 ```bash
 mvtsa <options>
 ```
-If the package was cloned from Github, the app can be started by running the ```main.py``` file:
+To check if everything is working, we can pass the ``--example`` option to load the example data:
+```bash
+mvtsa --example
+```
+If the package was cloned from Github, the app can instead be started by running the ```main.py``` file:
 ```bash
 python main.py <options>
 ```
@@ -105,6 +109,7 @@ We can use the ```--help``` option to see what options are available:
 | Option | Argument(s) | Description |
 | --- | --- | --- |
 | ```-h``` or ```--help``` | - |Show help message and exit |
+| ```-e``` or ```--example``` | - | Load the example data |
 | ```-f``` or ```--file``` | FILE | Path to the initial data to load (`.xlsx`, `.csv` or pickled Pandas Dataframe) |
 | ```-m``` or ```--use_monitor``` | MONITOR | Integer-index on which to launch the app |
 | ```-d``` or ```--dark_mode``` | - | Enables dark mode |

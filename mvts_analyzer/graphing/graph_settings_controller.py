@@ -345,11 +345,21 @@ class GraphSettingsController():
 			log.debug(f"Trying to set datamodel axis to {new_xaxis} but column was not found, resetting to ' '")
 			self.model.x_axis = ""
 		else:
+			try: #Try and set new xlimrange, if column is incompatible (non-numeric) -> reset to old value
+				new_xlimrange = self.data_model.get_col_limrange(new_xaxis)
+			except Exception as err: #pylint: disable=broad-except
+				log.warning(f"Could not set x-axis as we could not find the x-range for column {new_xaxis}... Error: {err}")
+				gui_utility.create_qt_warningbox(
+					f"<b>Could not set new x-axis as we could not find the x-range (min/max) for column {self.model.x_axis}...</b><br>"
+					f"Error: {err}.<br>Is the selected column a numeric/datetime column?",
+					box_title="Could not set x-axis"
+				)
+				self.process_model_x_axis() #Reset to old value
+				return
 			self.model.x_axis = new_xaxis
-				# def _update_domains(self):
-		new_xlimrange = self.data_model.get_col_limrange(self.model.x_axis)
-		self.model.plot_domain_limrange = new_xlimrange
-		log.debug(f"Updated x limrange to {new_xlimrange}")
+
+		self.model.plot_domain_limrange = new_xlimrange #type: ignore #Not unbound...
+		log.debug(f"Updated x limrange to {new_xlimrange}") #type: ignore
 
 		# self._update_domains()
 
@@ -448,7 +458,7 @@ class GraphSettingsController():
 		log.info("Now trying to append a df from file...")
 
 		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', #type: ignore
-				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl *.*, *.xlsx, *.csv)")
+				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl; *.xlsx; *.csv)")
 		success, msg, df = df_utility.load_dataframe_using_file_extension(fname[0])
 		if not success or df is None:
 			gui_utility.create_qt_warningbox(msg, "Error")
@@ -465,7 +475,7 @@ class GraphSettingsController():
 		Show a popup to load a dataframe from file
 		"""
 		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', #type: ignore
-				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl *.*, *.xlsx, *.csv)")
+				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl; *.xlsx; *.csv)")
 		if len(fname[0]) == 0 or fname[0] is None:
 			#If nothing selected -> just return
 			return

@@ -44,6 +44,11 @@ def main(debug_level=logging.INFO):
 						action="store_true",
 						default=False
 					)
+	parser.add_argument("-e", "--example",
+						help="Load the example data",
+						action="store_true",
+						default=False
+					)
 
 	parser.add_argument("-m", "--use_monitor",
 						help="Launch on monitor with given index (default is primary monitor).",
@@ -60,7 +65,18 @@ def main(debug_level=logging.INFO):
 		app.setStyleSheet(open(os.path.join(cur_path, "qt-dark-theme.stylesheet"), encoding="utf-8").read())
 		plt.style.use('dark_background')
 
-	main_win = MainWindow(graph_model_args={"df_path": args.file})
+	graph_model_args = {}
+
+	if args.example:
+		graph_model_args["df_path"] = os.path.join(
+			os.path.dirname(os.path.realpath(__file__)), 
+			"example",
+			"example_data.xlsx"
+		)
+	elif args.file is not None:
+		graph_model_args["df_path"] = args.file
+
+	main_win = MainWindow(graph_model_args=graph_model_args)
 	if args.use_monitor:
 		#Launch on monitor with given index
 		monitor = app.screens()[args.launch_on_monitor].geometry()
