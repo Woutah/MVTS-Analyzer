@@ -7,7 +7,7 @@ import logging
 from PySide6 import QtCore, QtWidgets
 
 from mvts_analyzer.widgets import datastructures
-from mvts_analyzer.utility.GuiUtility import safe_parse_new
+from mvts_analyzer.utility.gui_utility import safe_parse_new
 
 from .range_slider import QRangeSlider
 

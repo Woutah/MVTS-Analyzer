@@ -12,7 +12,7 @@ from mvts_analyzer.res.Paths import Paths
 
 from mvts_analyzer.graphing.graph_data import GraphData
 from mvts_analyzer.ui.apply_python_window_ui import Ui_ApplyPythonWindow
-from mvts_analyzer.utility import GuiUtility
+from mvts_analyzer.utility import gui_utility
 
 log = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class ApplyPythonWindow(QtWidgets.QMainWindow, object):
 		success, msg = model.apply_python_code(self.python_code, force_update_afterwards=force_update_afterwards)
 
 		if not success:
-			GuiUtility.create_qt_warningbox(msg)
+			gui_utility.create_qt_warningbox(msg)
 
 
 	@property
@@ -108,7 +108,7 @@ class ApplyPythonWindow(QtWidgets.QMainWindow, object):
 				self.python_code = pythonfile.read() #Load pythonfile
 			self.cur_save_path = path
 		except FileNotFoundError:
-			GuiUtility.create_qt_warningbox("File not found", f"Could not find file {path}")
+			gui_utility.create_qt_warningbox("File not found", f"Could not find file {path}")
 
 	def save_if_path_known(self) -> None:
 		"""
@@ -127,7 +127,7 @@ class ApplyPythonWindow(QtWidgets.QMainWindow, object):
 		else:
 			log.error(f"Could not save under name: {fname}")
 
-	@GuiUtility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Error while saving python code</b>")
+	@gui_utility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Error while saving python code</b>")
 	def save_to_file(self, path : str):
 		"""
 		Saves the python code to the given path

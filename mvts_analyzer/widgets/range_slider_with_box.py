@@ -7,7 +7,7 @@ import typing
 
 from PySide6 import QtCore, QtWidgets
 
-from mvts_analyzer.utility import GuiUtility
+from mvts_analyzer.utility import gui_utility
 from mvts_analyzer.widgets.datastructures import LimitedValue
 
 log = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ class RangeSliderWithBox(QtWidgets.QWidget):
 
 	def _text_box_changed(self, new_text):
 		print(new_text)
-		result = GuiUtility.safe_parse_new(new_text, cast_using=self._text_parser)
+		result = gui_utility.safe_parse_new(new_text, cast_using=self._text_parser)
 
 		log.info(f"text_box changed to: {result}")
 		if result[0] is True or not self._reset_on_parse_fail:
