@@ -32,6 +32,7 @@ class MainWindow(QtWidgets.QMainWindow):
 	"""The main window from which all the other windows can be accessed"""
 	def __init__(self,
 			graph_model_args = None,
+			graph_settings_model_args = None,
 			settings_path = r"C:\Users\user\Documents\radial_drilling\MVTS-analyzer\settings.ini",
 			python_appliables_path = None,
 			**kwargs
@@ -39,12 +40,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		"""
 		graph_model_args (dict) : Arguments to pass to the graph data model
+		graph_settings_model_args (dict) : Arguments to pass to the graph settings model 
+			(e.g. what columns to show initially)
 		settings_path (str) : Optional path to where the application settings should be stored, if None, use default loc
 		python_appliables_path (str) : Optional path to where the python appliables are stored, if None, use default path
 		"""
 		super(MainWindow, self).__init__(**kwargs)
 		if graph_model_args is None:
 			graph_model_args = {}
+		if graph_settings_model_args is None:
+			graph_settings_model_args = {}
 		log.debug("Initializing main window")
 
 		self.ui = Ui_MainWindow() #pylint: disable=invalid-name
@@ -88,7 +93,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.plot_widget = QtWidgets.QWidget() #the main plot tab
 		self.graph_data_model = GraphData(**graph_model_args)
-		self.graph_settings_model = GraphSettingsModel() #Create model
+		self.graph_settings_model = GraphSettingsModel(**graph_settings_model_args) #Create model
 		self.plotter = QPlotter(self.graph_data_model, self.graph_settings_model)
 		self.graph_view = GraphSettingsView(self.plotter) # Create View (using created plotter)
 		self.setCentralWidget(self.graph_view)
