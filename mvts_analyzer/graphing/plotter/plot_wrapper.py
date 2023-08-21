@@ -16,7 +16,7 @@ import numbers
 import time
 import traceback
 from cmath import nan
-
+import os
 import keyboard
 import matplotlib
 import matplotlib.axes
@@ -43,7 +43,6 @@ from mvts_analyzer.graphing.graph_data import GraphData, OperationType
 from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.graphing.plotter.collection_selector import \
     CollectionSelector
-from mvts_analyzer.res.Paths import Paths
 from mvts_analyzer.utility.gui_utility import catch_show_exception_in_popup_decorator
 from mvts_analyzer.utility.gui_utility import create_qt_warningbox
 
@@ -214,8 +213,8 @@ class MplCanvas(FigureCanvasQTAgg):
 			fname = QtWidgets.QFileDialog.getSaveFileName(
 						None, #type: ignore
 						'Save As...',
-						# Paths.FiguresBasePath,
-						Paths.FiguresBasePath,
+						#Current working directory
+						os.getcwd(),
 						"""Portable Network Graphics (*.png)
 						Joint Photographic Experts Group (*.jpeg, *.jpg)"
 						PGF code for LaTeX (*.pgf)

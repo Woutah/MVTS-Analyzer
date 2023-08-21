@@ -8,11 +8,12 @@ import logging
 import os
 
 from PySide6 import QtWidgets
-from mvts_analyzer.res.Paths import Paths
 
 from mvts_analyzer.graphing.graph_data import GraphData
 from mvts_analyzer.ui.apply_python_window_ui import Ui_ApplyPythonWindow
 from mvts_analyzer.utility import gui_utility
+import mvts_analyzer.windows.main_window #pylint: disable=unused-import
+
 
 log = logging.getLogger(__name__)
 
@@ -20,11 +21,16 @@ class ApplyPythonWindow(QtWidgets.QMainWindow, object):
 	"""
 	Window with a textedit for python code, and a button to execute it.
 	"""
-
-	def __init__(self, GraphDataModel : GraphData, *args, **kwargs) -> None:
+	# from mvts_analyzer.windows.main_window import MainWindow as MainWindow
+	def __init__(self, GraphDataModel : GraphData,
+	    	main_window,
+			*args,
+			**kwargs
+		) -> None:
 		super().__init__(*args, **kwargs)
 		log.debug("Creating apply pythonwindow")
 		self.GraphDataModel = GraphDataModel
+		self.MainWindow = main_window
 
 		# self.window = QtWidgets.QMainWindow(*args, **kwargs) #Create window
 		self.ui = Ui_ApplyPythonWindow()
@@ -60,7 +66,7 @@ class ApplyPythonWindow(QtWidgets.QMainWindow, object):
 
 	def execute_code(self, force_update_afterwards : bool):
 		"""Executes the python code in the textedit
-		
+
 		Args:
 			force_update_afterwards (bool): If True, then the graphdata will be updated after the code is executed
 				to reflect possible changes in the dataframe
@@ -88,21 +94,20 @@ class ApplyPythonWindow(QtWidgets.QMainWindow, object):
 		"""Opens a filedialog to open a python file"""
 		log.info("Opening python code from file")
 		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file',  #type: ignore
-				Paths.DatabasePythonDefaultAppliablesPath, "Python Dataframe Appliable code (*.py)")
+				self.MainWindow.get_python_appliables_path(), "Python Dataframe Appliable code (*.py)") #type: ignore
 		log.debug(f"Picked file: {fname}")
 		self.open_from_file(fname[0])
 
 
 	def open_from_file(self, path : str):
 		"""Opens a python file from the given path
-		
+
 		Args:
 			path (str): The path to the python file
 		"""
 		log.info(f"Now loading from file {path}")
 		if path is None or path == "":
 			return
-
 		try:
 			with open(path, encoding="utf-8") as pythonfile:
 				self.python_code = pythonfile.read() #Load pythonfile
@@ -119,13 +124,30 @@ class ApplyPythonWindow(QtWidgets.QMainWindow, object):
 
 	def save_to_file_popup(self):
 		"""Opens a filedialog to save the python code to a file"""
-		fname = QtWidgets.QFileDialog.getSaveFileName(None, 'Save As...', #type: ignore
-			os.path.join(Paths.DatabasePythonUsermadeAppliablesPath, self.cur_save_path), "Python file (*.py)")
-		if fname is not None and len(fname[0]) > 0:
+		base_path = self.cur_save_path
+		if base_path is None or len(self.cur_save_path) == 0:
+			base_path = self.MainWindow.get_python_appliables_path()
+		fname, _ = QtWidgets.QFileDialog.getSaveFileName(None, 'Save As...', #type: ignore
+			base_path, "Python file (*.py)")
+		if fname is not None and len(fname) > 0:
 			log.info(f"Trying to save to path {fname}")
-			self.save_to_file(fname[0])
+			self.save_to_file(fname)
 		else:
 			log.error(f"Could not save under name: {fname}")
+			return
+
+		cur_appliables_path = self.MainWindow.get_python_appliables_path()
+		if cur_appliables_path is None or not fname.startswith(cur_appliables_path):
+			folder_loc = fname.rsplit(os.sep, 1)[0].rsplit("/", 1)[0]
+			msg_box = QtWidgets.QMessageBox()
+			msg_box.setText("The script was not saved in the python appliables folder - do you want to change the appliables "
+		   		f"folder location (currently: {cur_appliables_path}) to the saved script-location ({folder_loc})?")
+			msg_box.setStandardButtons(
+				QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
+			)
+			if msg_box.exec() == QtWidgets.QMessageBox.StandardButton.Yes:
+				self.MainWindow.set_python_appliables_path(folder_loc)
+
 
 	@gui_utility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Error while saving python code</b>")
 	def save_to_file(self, path : str):

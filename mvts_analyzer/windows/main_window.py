@@ -17,19 +17,30 @@ from mvts_analyzer.graphing.graph_settings_controller import \
 from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.graphing.graph_settings_view import GraphSettingsView
 from mvts_analyzer.graphing.plotter.plot_wrapper import QPlotter
-from mvts_analyzer.res.Paths import Paths
 from mvts_analyzer.ui.main_window_ui import Ui_MainWindow
 from mvts_analyzer.utility.gui_utility import create_qt_warningbox
 from mvts_analyzer.windows.apply_python_window import ApplyPythonWindow
 from mvts_analyzer.windows.merge_column_window import MergeColumnWindow
 from mvts_analyzer.windows.rename_label_window import RenameLabelWindow
+import mvts_analyzer.res.app_resources_rc #pylint: disable=unused-import #type: ignore
 
 matplotlib.use('Qt5Agg')
 log = logging.getLogger(__name__)
 
 class MainWindow(QtWidgets.QMainWindow):
 	"""The main window from which all the other windows can be accessed"""
-	def __init__(self, graph_model_args = None, **kwargs):
+	def __init__(self,
+			graph_model_args = None,
+			settings_path = r"C:\Users\user\Documents\radial_drilling\MVTS-analyzer\settings.ini",
+			python_appliables_path = None,
+			**kwargs
+		):
+
+		"""
+		graph_model_args (dict) : Arguments to pass to the graph data model
+		settings_path (str) : Optional path to where the application settings should be stored, if None, use default loc
+		python_appliables_path (str) : Optional path to where the python appliables are stored, if None, use default path
+		"""
 		super(MainWindow, self).__init__(**kwargs)
 		if graph_model_args is None:
 			graph_model_args = {}
@@ -38,6 +49,31 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.ui = Ui_MainWindow() #pylint: disable=invalid-name
 		self.ui.setupUi(self)
 
+		#========= Settings ================
+		if settings_path is None or not os.path.exists(settings_path):
+			self._settings = QtCore.QSettings("MVTS-Tools", "MVTS-Analyzer")
+		else:
+			self._settings = QtCore.QSettings(settings_path, QtCore.QSettings.Format.IniFormat)
+
+
+		self.restoreGeometry(self._settings.value(
+			"window_geometry", self.saveGeometry(), type=QtCore.QRect)) # type: ignore
+		new_window_state = self._settings.value("window_state", self.windowState())
+		if new_window_state != QtCore.Qt.WindowState.WindowNoState:
+			self.restoreState(new_window_state) # type: ignore
+
+
+		if python_appliables_path is None:
+			self._python_appliables_path : str | None = self._settings.value("python_appliables_path", None) #type: ignore
+			if self._python_appliables_path is None:
+				cur_path = os.path.dirname(os.path.realpath(__file__))
+				self._python_appliables_path = os.path.join(cur_path, "..", "python_appliables")
+		else:
+			log.info(f"Loading settings from {python_appliables_path}")
+			if not os.path.exists(python_appliables_path):
+				raise FileNotFoundError(f"Could not find python appliables path {python_appliables_path}")
+			elif not os.path.isdir(python_appliables_path):
+				raise FileNotFoundError(f"Provided python appliables path {python_appliables_path} is not a directory")
 		#Launch in (semi) fullscreen mode
 		#=========graph_tab=================
 
@@ -98,6 +134,24 @@ class MainWindow(QtWidgets.QMainWindow):
 		#================= Create Python appliable links
 		self.recreate_python_appliable_menu()
 
+	def get_python_appliables_path(self):
+		"""Return the path to the python appliables folder"""
+		return self._python_appliables_path
+
+	def set_python_appliables_path(self, new_path):
+		"""Set the path to the python appliables folder"""
+		if new_path != self._python_appliables_path: #If change
+			self._python_appliables_path = new_path
+			self.recreate_python_appliable_menu() #Recreate the menu
+
+	def save_settings(self):
+		"""
+		Save the app-settings to the settings file
+		"""
+		log.info("Saving settings")
+		self._settings.setValue("window_geometry", self.saveGeometry())
+		self._settings.setValue("window_state", self.saveState())
+		self._settings.setValue("python_appliables_path", self._python_appliables_path)
 
 	def _rec_repopulate_python_appliable_menu(self,
 				cur_path : str,
@@ -126,24 +180,50 @@ class MainWindow(QtWidgets.QMainWindow):
 				newaction.triggered.connect(lambda *_, path=path, name=name: self.run_python_appliable(path))
 
 
+	def popup_set_python_appliables_folder(self):
+		"""
+		Reloads the python appliable menu based on the selected folder
+		"""
+		log.debug("Popup set python appliables folder")
+		new_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Select folder with python appliables")
+		if new_path is None or new_path == "":
+			return
+		self._python_appliables_path = new_path
+		self.recreate_python_appliable_menu()
 
 	def recreate_python_appliable_menu(self):
-		"""Reloads the python appliable menu based on the selected folder"""
-		appliables_dir = Paths.DatabasePythonDefaultAppliablesPath
+		"""
+		Reloads the python appliable menu based on the selected folder
+		"""
 		self.menu_actions = []
 		self.ui.menuPython_File.clear()
 		log.debug("Recreating python appliables thingy")
 
+
 		try:
-			self._rec_repopulate_python_appliable_menu(appliables_dir, cur_depth=0, cur_menu=self.ui.menuPython_File)
+			if self._python_appliables_path is None:
+				raise ValueError("No python appliables path set")
+			self._rec_repopulate_python_appliable_menu(
+				self._python_appliables_path, cur_depth=0, cur_menu=self.ui.menuPython_File)
 			self.ui.menuPython_File.addSeparator()
-			newaction = QtGui.QAction("Refresh")
-			self.menu_actions.append(newaction)
-			self.ui.menuPython_File.addAction(newaction)
-			newaction.triggered.connect(self.recreate_python_appliable_menu)
 		except Exception as ex: #pylint: disable=broad-except
 			log.error(f"Error when repopulating appliables: {ex}")
 
+		set_folder_action = QtGui.QAction("Set Folder...")
+		self.menu_actions.append(set_folder_action)
+		icon = QtGui.QIcon(":/Icons/icons/Custom Icons/python-folder-open.svg")
+		set_folder_action.setIcon(icon)
+		self.ui.menuPython_File.addAction(set_folder_action)
+
+
+		set_folder_action.triggered.connect(self.popup_set_python_appliables_folder)
+
+		newaction = QtGui.QAction("Refresh")
+		self.menu_actions.append(newaction)
+		self.ui.menuPython_File.addAction(newaction)
+		icon = QtGui.QIcon(":/Icons/icons/Tango Icons/actions/view-refresh.svg")
+		newaction.setIcon(icon)
+		newaction.triggered.connect(self.recreate_python_appliable_menu)
 
 	def run_python_appliable(self, path):
 		"""Run a python appliable """
@@ -155,9 +235,13 @@ class MainWindow(QtWidgets.QMainWindow):
 			# sys.modules["LoadedModule"] = module
 			spec.loader.exec_module(module) #type: ignore
 
-			# module = importlib.import_module(f"Operations.DefaultPythonAppliables.{name}")
-			# importlib.reload(module)
-			module.apply(self.graph_data_model, self.graph_settings_model, self)
+			#Check if "apply"-function exists in module
+			if hasattr(module, "apply"):
+				module.apply(self.graph_data_model, self.graph_settings_model, self)
+			else:
+				with open(path, encoding="utf-8") as pythonfile:
+					code = pythonfile.read() #Load pythonfile
+				self.graph_data_model.apply_python_code(code)
 		except Exception as ex: #pylint: disable=broad-exception-caught
 			msg = f"Error during execution of appliable: {ex}"
 			log.warning(msg)
@@ -263,7 +347,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				& ~QtCore.Qt.WindowState.WindowMinimized
 				| QtCore.Qt.WindowState.WindowActive)
 		else:
-			self.apply_python_window = ApplyPythonWindow(self.graph_data_model, parent=self)
+			self.apply_python_window = ApplyPythonWindow(self.graph_data_model, main_window=self)
 
 	def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
 		"""Overload default close event for a confirmation
@@ -278,6 +362,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		if ret == QtWidgets.QMessageBox.StandardButton.Yes:
 			log.info("Closing main window!")
 			# closemain = True
+			self.save_settings() #Save settings
 			self.close()
 			log.info("Also attempting to close all graph views!")
 			for wind in self.graph_view_windows:
