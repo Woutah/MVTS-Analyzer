@@ -55,6 +55,12 @@ def main(debug_level=logging.INFO):
 						type=int
 					)
 
+	parser.add_argument("--default_plot_list", 
+						help="Default list of columns to plot when a new dataframe is loaded",
+						default=None,
+						nargs="+"
+			 )
+
 	args = parser.parse_args()
 
 	app = QtWidgets.QApplication(sys.argv)
@@ -66,6 +72,7 @@ def main(debug_level=logging.INFO):
 		plt.style.use('dark_background')
 
 	graph_model_args = {}
+	graph_settings_model_args = {}
 
 	if args.example:
 		graph_model_args["df_path"] = os.path.join(
@@ -73,10 +80,16 @@ def main(debug_level=logging.INFO):
 			"example",
 			"example_data.csv"
 		)
-	elif args.file is not None:
-		graph_model_args["df_path"] = args.file
+		graph_settings_model_args["default_plot_list"] = ["Sensor1", "Sensor2"]
 
-	main_win = MainWindow(graph_model_args=graph_model_args)
+	else:
+		if args.file is not None:
+			graph_model_args["df_path"] = args.file
+		if args.default_plot_list is not None:
+			graph_settings_model_args["default_plot_list"] = args.default_plot_list
+
+
+	main_win = MainWindow(graph_model_args=graph_model_args, graph_settings_model_args=graph_settings_model_args)
 	if args.use_monitor:
 		#Launch on monitor with given index
 		monitor = app.screens()[args.launch_on_monitor].geometry()

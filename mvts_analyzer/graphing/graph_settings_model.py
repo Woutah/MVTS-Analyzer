@@ -70,7 +70,7 @@ class GraphSettingsModelData():
 
 
 		self._plot_list : typing.List[str] = []
-		self.plot_list_default : typing.List[str]= ["Depth(m)"]
+		self.plot_list_default : typing.List[str]= []
 
 		self._plotted_labels_list = []
 
@@ -171,9 +171,29 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	selectionGapFillMsChanged = QtCore.Signal(int)
 
 
-	# def __init__(self):
-	# 	super().__init__()
+	def __init__(
+				self,
+				default_plot_list : typing.Optional[typing.List[str]] = None,
+				default_x_axis : typing.Optional[str] = "DateTime",
 
+			):
+		"""
+		The initializer-function
+		Args:
+			default_plot_list (typing.Optional[typing.List[str]]): The default plot list to use, when a new file is loaded
+				we check if any of the columns in the default plot list are present in the new file, if so, add them to
+				the plot list in the order in which they appear in the default plot list.
+			default_x_axis (typing.Optional[str]): The default x-axis to use, when a new file is loaded
+
+		"""
+		super().__init__()
+
+		if default_plot_list is not None:
+			self.plot_list_default = default_plot_list
+			self.plot_list = default_plot_list
+		if default_x_axis is not None:
+			self._default_x_axis = default_x_axis
+			self.x_axis = default_x_axis
 	@property
 	def plot_color_method(self) -> str:
 		return self._plot_color_method
