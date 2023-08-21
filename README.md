@@ -119,7 +119,7 @@ If the package was only cloned from GitHub, the app can instead be started by ru
 ```bash
 python main.py <options>
 ```
-(or we can first install the app using "```pip install .```" in the root directory of the repository to install it)
+(or we can first install the app using "```pip install .```" in the root directory of the repository to install it, at which point we can launch it using the ```mvts-analyzer``` command)
 
 We can use the ```--help``` option to see what options are available:
 
@@ -130,7 +130,8 @@ We can use the ```--help``` option to see what options are available:
 | ```-e``` or ```--example``` | - | Load the example data |
 | ```-f``` or ```--file``` | FILE | Path to the initial data to load (`.xlsx`, `.csv` or pickled Pandas Dataframe) |
 | ```-m``` or ```--use_monitor``` | MONITOR | Integer-index on which to launch the app |
-| ```-d``` or ```--dark_mode``` | - | Enables dark mode |
+| ```-d``` or ```--dark_mode``` | - | Enables dark mode for the app|
+| ```--default_plot_list``` | LIST[STR] | List of columns that we want to try to add to the plot-list when loading new dataframes |
 
 
 ## Tested on
@@ -141,4 +142,4 @@ We can use the ```--help``` option to see what options are available:
 
 
 # Acknowledgments
-This project uses several Icons from the Tango-Icons library. The icons can be found [here](https://commons.wikimedia.org/wiki/Tango_icons).
+This project uses several Icons from the Tango-Icons library. The icons can be found [here](https://commons.wikimedia.org/wiki/Tango_icons) and [ here](http://tango.freedesktop.org/Tango_Icon_Library).
