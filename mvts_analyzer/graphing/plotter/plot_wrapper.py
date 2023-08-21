@@ -38,6 +38,7 @@ from matplotlib.backends.backend_qt5agg import \
     NavigationToolbar2QT as NavigationToolbar
 from PySide6 import QtWidgets
 from skimage.measure import block_reduce
+import typing
 
 from mvts_analyzer.graphing.graph_data import GraphData, OperationType
 from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
@@ -128,7 +129,7 @@ class MplCanvas(FigureCanvasQTAgg):
 		self.figure = fig
 		self.ax_sizes = { "main" : 10}
 		self.ax_order = ["main"]
-		self.ax_dict : dict[str, matplotlib.axes.Axes] = {"main" : ax }
+		self.ax_dict : typing.Dict[str, matplotlib.axes.Axes] = {"main" : ax }
 		self.twinxes = {"main" : {}}
 		self.annots = {"main": None}
 

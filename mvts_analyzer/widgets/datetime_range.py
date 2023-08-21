@@ -4,6 +4,7 @@ Implements DateTimeRange - a datetime range slider with 2 datetime-boxes
 import copy
 import datetime
 import logging
+import typing
 
 from PySide6 import QtCore, QtWidgets
 
@@ -173,7 +174,7 @@ class DateTimeRange(QtWidgets.QWidget):
 		self.text_boxes[0].blockSignals(False)
 		self.text_boxes[1].blockSignals(False)
 
-	def get_date_time(self) -> tuple[datetime.datetime | None, datetime.datetime | None]:
+	def get_date_time(self) -> typing.Tuple[typing.Union[datetime.datetime, None], typing.Union[datetime.datetime, None]]:
 		"""Returns the current datetime range-tuple"""
 		curdate = (self._limited_range.left_val, self._limited_range.right_val)
 		return curdate

@@ -21,12 +21,13 @@ setup(
 		],
 	},
 	install_requires=[ #Generated using pipreqs
-        'keyboard>=0.13.5'
-		'matplotlib>=3.7.2'
-		'numpy>=1.25.2'
-		'pandas>=2.0.3'
-		'PySide6>=6.5.2'
-		'scikit_learn>=1.3.0'
-		'skimage>=0.0'
+								#			Python 3.10 	
+        'keyboard>=0.13.5',		 #0.13.5 	= Tested working
+		'matplotlib>=3.7.2',	 #3.7.2 	= Tested working
+		'numpy>=1.15.0',		 #1.25.2 	= Tested working
+		'pandas>=2.0.3',		 #2.0.3 	= Tested working
+		'PySide6>=6.5.2',		 #6.5.2 	= Tested working
+		'scikit_learn>=1.3.0',	 #1.3.0		= Tested working
+		'scikit-image>=0.15',		 #0.21 		= Tested working
 	]
 )

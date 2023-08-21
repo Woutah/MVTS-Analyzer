@@ -79,7 +79,7 @@ class GraphSettingsModelData():
 		self._default_x_axis : str = "DateTime"
 		self._plot_font_size : int = 10
 
-		self.label_column_presets : list[str] = []
+		self.label_column_presets : typing.List[str] = []
 		self.label_column_options_presets : typing.Dict[str, typing.List[str]] = {}
 
 
@@ -390,7 +390,6 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 
 	@property
 	def plot_list(self) -> typing.List[str]:
-	# def plot_list(self) -> typing.List[str]:
 		return self._plot_list
 
 	@plot_list.setter
