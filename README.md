@@ -65,7 +65,7 @@ Other features include:
 - Renaming and deleting annotations
 - Copying the currently displayed figure
 - Exporting the currently displayed figure 
-
+- Displaying fft-plots behind the main-plot, pandas columns with numpy arrays are automatically detected
 
 
 

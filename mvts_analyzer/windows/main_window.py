@@ -29,8 +29,8 @@ log = logging.getLogger(__name__)
 
 class MainWindow(QtWidgets.QMainWindow):
 	"""The main window from which all the other windows can be accessed"""
-	def __init__(self, graph_model_args = None, *args, **kwargs):
-		super(MainWindow, self).__init__(*args, **kwargs)
+	def __init__(self, graph_model_args = None, **kwargs):
+		super(MainWindow, self).__init__(**kwargs)
 		if graph_model_args is None:
 			graph_model_args = {}
 		log.debug("Initializing main window")
@@ -188,7 +188,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def open_view_copy(self, graph_settings_model = None):
 		"""Open a copy of the current view in a new window"""
-		assert(graph_settings_model is None or type(graph_settings_model) == type(GraphSettingsModel))
+		assert graph_settings_model is None or not isinstance(graph_settings_model, GraphSettingsModel)
 
 		new_settings = GraphSettingsModel()
 		new_settings.copy_attrs(self.graph_settings_model)
@@ -197,14 +197,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		new_view = self.graph_controller.open_view_window(
 			self.graph_data_model,
 			graph_settings_model=new_settings,
-			parent=self	
+			parent=self
 		)
 		self.graph_view_windows.append(new_view)
 
 		# self.view_window = QtWidgets.QMainWindow(self)
-		r = QtGui.QGuiApplication.primaryScreen().geometry()
-		r.setSize(QtCore.QSize( int(0.7* r.width()),int(0.7* r.height())))
-		new_view.setGeometry(r)
+		screen_rect = QtGui.QGuiApplication.primaryScreen().geometry()
+		screen_rect.setSize(QtCore.QSize( int(0.7* screen_rect.width()),int(0.7* screen_rect.height())))
+		new_view.setGeometry(screen_rect)
 
 		qt_rect = new_view.frameGeometry()
 		cent_point = QtGui.QGuiApplication.primaryScreen().geometry().center()
@@ -247,15 +247,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		else:
 			self.label_column_merge_tool = MergeColumnWindow(self.graph_data_model, parent=self)
 
-	# def open_live_window(self):
-	# 	log.info("Opening live window!")
-	# 	if self.live_window:
-	# 		log.debug("It already existed, bringing to front")
-	# 		return
-	# 	self.live_window = LiveViewWindow()
-
 
 	def open_python_window(self):
+		"""
+		Opens the python-code window if it does not exist, else brings it to the front and unhides it
+		"""
 		log.info("Now opening python window")
 		if self.apply_python_window:
 			log.info("Winodw already exists?")

@@ -1,13 +1,24 @@
-import subprocess, os, platform, pathlib
 import datetime
-from datetime import timezone
-import numpy as np
-import matplotlib
-from sklearn import preprocessing
-import math
-from skimage.measure import block_reduce
-import pandas as pd
 import logging
+import math
+import numbers
+import os
+import pathlib
+import platform
+import subprocess
+import typing
+from datetime import timezone
+
+import matplotlib
+import matplotlib.axes
+import matplotlib.dates
+import matplotlib.lines
+import matplotlib.figure
+import numpy as np
+import pandas as pd
+from skimage.measure import block_reduce
+from sklearn import preprocessing
+
 log = logging.getLogger(__name__)
 
 
@@ -21,7 +32,7 @@ def get_full_path(subpath):
 		str: the full path
 	"""
 	cur_dir = pathlib.Path(__file__).parent.absolute()
-	log.debug("Parent path: "+ str( pathlib.Path(__file__).parent.absolute()))
+	log.debug(f"Parent path: {pathlib.Path(__file__).parent.absolute()}")
 	return os.path.join(cur_dir, subpath)
 
 def create_path(path : str):
@@ -36,30 +47,30 @@ def create_path(path : str):
 
 
 
-def datetime_to_iso8601(datetime : datetime.datetime) -> str:
+def datetime_to_iso8601(date_time : datetime.datetime) -> str:
 	"""Generates iso8601 string from datetime
 
 	Args:
-		datetime (datetime.datetime): datetime of to-be-converted timestamp
+		date_time (datetime.datetime): datetime of to-be-converted timestamp
 
 	Returns:
 		string: string in isoformat (e.g. 2020-10-16T13:53:11.000Z)
 	"""
 
-	return datetime.isoformat()#.replace("+00:00", "Z") #Also convert to none/Z-format (otherwise it is not recognised by restful api)
+	return date_time.isoformat()#.replace("+00:00", "Z") #Also convert to none/Z-format (otherwise it is not recognised by restful api)
 
 
-def datetime_to_timestr(datetime : datetime.datetime) -> str        :
+def datetime_to_timestr(date_time : datetime.datetime) -> str        :
 	"""Extracts time from datetime format
 
 	Args:
-		datetime (datetime.datetime): date/time as datetime.datetime format
+		date_time (datetime.datetime): date/time as datetime.datetime format
 
 	Returns:
 		str: the time from the datetime 
 	"""
 	# return datetime_to_iso8601(datetime).split('T')[1].split('+')[0]
-	return datetime_to_iso8601(datetime).split('+')[0]
+	return datetime_to_iso8601(date_time).split('+')[0]
 
 
 def open_file_editor(filepath): #for testing purposes  #TODO: make sure this does not crash the system
@@ -84,13 +95,18 @@ def overwrite_to_file(filename, content):
 		filename (str): name of the file including extension
 		content (str): what to write to file
 	"""
-	f = open(filename, "w")
-	f.write(content)
-	f.close()
+	with open(filename, "w") as file:
+		file.write(content)
 
 
 
-def norm_plot(df : pd.DataFrame, ax : matplotlib.axes.Axes, x_axis : str="DateTime" , dont_norm : list=["Date", "Time", "DateTime", "Classification", "Prediction"], column_name_dict : dict = {}, plot_kwarg : dict = {}):
+def norm_plot(df : pd.DataFrame, #pylint: disable=invalid-name
+		ax : matplotlib.axes.Axes,
+		x_axis : str="DateTime" ,
+		dont_norm : list=["Date", "Time", "DateTime", "Classification", "Prediction"], 
+		column_name_dict : dict | None = None, 
+		plot_kwarg : dict | None = None
+	):
 	"""Plot normalized dataframe entries 
 
 	Args:
@@ -101,6 +117,10 @@ def norm_plot(df : pd.DataFrame, ax : matplotlib.axes.Axes, x_axis : str="DateTi
 		column_name_dict (dict, optional): column-renaming dict for plotting purposes, e.g. {"DateTime": "Date"} would rename DateTime column to "Date" in plot. Defaults to {}.
 		plot_kwarg (dict, optional): kwargs for pd.dataframe.plot (e.g. s=10 for larger dots etc.). Defaults to {}.
 	"""
+	if column_name_dict is None:
+		column_name_dict = {}
+	if plot_kwarg is None:
+		plot_kwarg = {}
 
 	df_norm = df.copy()
 	for col in df.columns: #go over columns, normalize them 
@@ -147,7 +167,7 @@ def norm_plot_pandas_as_numpy(df : pd.DataFrame, ax : matplotlib.axes.Axes, x_ax
 
 
 
-def get_first_occurence(arr : np.array, elem):
+def get_first_occurence(arr : np.ndarray, elem):
 	"""Get first occurency in numpy array   
 
 	Args:
@@ -162,13 +182,9 @@ def get_first_occurence(arr : np.array, elem):
 			return i
 	return -1
 
-import typing
-import numbers
-import matplotlib
-import matplotlib.figure
 
-import time
-import matplotlib.dates
+
+
 def find_nearest_idx_sorted(array,value):
 	"""Source: https://stackoverflow.com/questions/2566412/find-nearest-value-in-numpy-array
 	"""
@@ -179,7 +195,13 @@ def find_nearest_idx_sorted(array,value):
 		return idx
 
 
-def plot_colorbars(df : pd.DataFrame, label_columns : typing.List[str], ax_list : typing.List[any], canvas : matplotlib.figure.Figure, datetime_column : str = "", preferred_sorting : typing.List[str] = []):
+def plot_colorbars(df : pd.DataFrame,
+		label_columns : typing.List[str],
+		ax_list : typing.List[typing.Any],
+		canvas : matplotlib.figure.Figure,
+		datetime_column : str = "",
+		preferred_sorting : typing.List[str] = []
+	):
 	"""Function used for plotting colorbar, indicating classification at each time
 
 
@@ -214,7 +236,11 @@ def plot_colorbars(df : pd.DataFrame, label_columns : typing.List[str], ax_list 
 
 	for col in label_columns:
 		all_classes.update(list(dt_lbl_df[col].unique())) #Use this for only classes in current view
-	all_classes = [i for i in all_classes if i is not None and not pd.isna(i) and(not isinstance(i, numbers.Number) or not np.isnan(i)) and i != "nan"] #All classes except NaN (numpy), <NA> (pandas) (make sure to check for <NA> first as otherwise error is trhowns)
+	all_classes = [i for i in all_classes 
+		if i is not None and not pd.isna(i) 
+			and(not isinstance(i, numbers.Number) 
+       			or not np.isnan(i)) and i != "nan"
+	] #All classes except NaN (numpy), <NA> (pandas) (make sure to check for <NA> first as otherwise error is trhowns)
 	
 
 	all_classes = set([i for i in all_classes if i != "None"])
@@ -226,7 +252,7 @@ def plot_colorbars(df : pd.DataFrame, label_columns : typing.List[str], ax_list 
 	colors = np.insert(colors, 0, np.array((0.5, 0.5, 0.5, 0.3)), axis=0) 
 
 	all_classes_dict = { item : nr for (nr,item) in enumerate(all_classes)}
-	all_classes = np.array(list(all_classes)) #Set back to numpy for indexing options #20221021 moved this after creation all_classes dict -> otherwise they become strings
+	all_classes = np.array(list(all_classes)) #Set back to numpy for indexing options
 	color_map = matplotlib.colors.ListedColormap(colors)
 	log.debug(f"Label columns: {label_columns}")
 	axes = ax_list
@@ -251,7 +277,7 @@ def plot_colorbars(df : pd.DataFrame, label_columns : typing.List[str], ax_list 
 		#TODO: commented following line: 
 		# dt_lbl[label_col] = dt_lbl[label_col].astype(np.int64) #No nones should remain -> this should succeed. NOTE: pd.Int64Dtype() created errors, even when first converting to numpy, this makes sure everything works before plotting
 
-		X, Y, Z = [], [], []
+		X, Y, Z = [], [], [] #pylint: disable=invalid-name
 		log.debug(f"Unique values in label column {label_col} : {dt_lbl[label_col].unique()}")
 		if len(datetime_column):
 			X = dt_lbl[datetime_column].to_numpy()
@@ -266,59 +292,43 @@ def plot_colorbars(df : pd.DataFrame, label_columns : typing.List[str], ax_list 
 
 
 		# ======== Annotation on hover ===============
-		annot = ax.annotate("", xy=(0,0), xytext=(0,0 ),textcoords="offset points", ha='center', va='center',
-					bbox=dict(boxstyle="round", fc="w"))
+		ax.annotate("", xy=(0,0), xytext=(0,0 ),textcoords="offset points", ha='center', va='center',
+			bbox=dict(boxstyle="round", fc="w"))
 
 		
 		
-					#arrowprops=dict(arrowstyle="->"))
-		#Show dt_lbl string when hovering over pcolumesh:
-		def update_annot(x, y, newtext, annot):
-			annot.set_visible(True)
-			annot.xy = (x,y)
-			annot.set_text(newtext)
-			annot.get_bbox_patch().set_alpha(1)
-			canvas.draw_idle()
+		# def update_annot(x, y, newtext, annot):
+		# 	annot.set_visible(True)
+		# 	annot.xy = (x,y)
+		# 	annot.set_text(newtext)
+		# 	annot.get_bbox_patch().set_alpha(1)
+		# 	canvas.draw_idle()
 
-		def on_axis_leave(event, annot):
-			#check if annotation is visible (otherwise lag when moving away from plot)
-			if annot.get_visible():
-				annot.set_visible(False)
-				canvas.draw_idle()
+		# def on_axis_leave(event, annot):
+		# 	#check if annotation is visible (otherwise lag when moving away from plot)
+		# 	if annot.get_visible():
+		# 		annot.set_visible(False)
+		# 		canvas.draw_idle()
 		
 		def format_coord(x, y, original_labels : np.ndarray, original_dts : np.ndarray):
-			# time_before = time.perf_counter()
 			dt = matplotlib.dates.num2date(x).replace(tzinfo=None)
 			dt = np.datetime64(dt)
-
 			nearest = find_nearest_idx_sorted(original_dts, dt)
-			# log.info(f"find_nearest_idx_sorted took {time.perf_counter() - time_before} s")
-
 			label = original_labels[nearest]
-
-			# update_annot(x, y, label) #TODO: this takes some time so updating label text takes some ms -> make this faster? 
 			return f"x={dt} 		class={label}"
-			
-			# return f"x={dt} 		class={ dt_lbl_original[label_col][dt_lbl_original['DateTime'].sub(dt).abs().idxmin()]}"
 
-		def on_axis_hover(event, ax, original_labels : np.ndarray, original_dts : np.ndarray, annot): #NOTE: merged this function with format_coord -> might not be necceasary anymore
-			if event.inaxes == ax:
-				x, y = event.xdata, 0.5
-				dt = matplotlib.dates.num2date(x).replace(tzinfo=None)
-				dt = np.datetime64(dt)
-				# label = original_labels[original_dts.sub(dt).abs().idxmin()]
-
-
-				nearest = find_nearest_idx_sorted(original_dts, dt)
-				# print(f"Nearest: {nearest}")
-				label = original_labels[nearest]
-
-				#Show label in pyqt hint box:
-
-			
-				# update_annot(x, y, label, annot)
-			# else:
-			# 	on_axis_leave(event, annot)
+		# def on_axis_hover(event, ax, original_labels : np.ndarray, original_dts : np.ndarray, annot): #NOTE: merged this function with format_coord -> might not be necceasary anymore
+		# 	if event.inaxes == ax:
+		# 		x, y = event.xdata, 0.5
+		# 		dt = matplotlib.dates.num2date(x).replace(tzinfo=None)
+		# 		dt = np.datetime64(dt)
+		# 		nearest = find_nearest_idx_sorted(original_dts, dt)
+		# 		# print(f"Nearest: {nearest}")
+		# 		label = original_labels[nearest]
+		# 		#Show label in pyqt hint box:			
+		# 		# update_annot(x, y, label, annot)
+		# 	# else:
+		# 	# 	on_axis_leave(event, annot)
 			
 
 
@@ -327,9 +337,9 @@ def plot_colorbars(df : pd.DataFrame, label_columns : typing.List[str], ax_list 
 		else:
 			dt_col_vals = dt_lbl_original.index.to_numpy()
 
-		# canvas.mpl_connect("motion_notify_event", lambda x, ax=ax, original_labels=dt_lbl_original[label_col].to_numpy(), original_dts=dt_col_vals, annot=annot: on_axis_hover(x, ax, original_labels, original_dts, annot))
-		# canvas.mpl_connect("axes_leave_event", lambda x, annot=annot: on_axis_leave(x, annot))
-		ax.format_coord = lambda x,y, original_labels=dt_lbl_original[label_col], original_dts=dt_col_vals: format_coord(x,y, original_labels=original_labels, original_dts=original_dts )
+
+		ax.format_coord = (lambda x,y, original_labels=dt_lbl_original[label_col], original_dts=dt_col_vals: 
+		    format_coord(x,y, original_labels=original_labels, original_dts=original_dts)
 	
 	
 	legend_names = all_classes
@@ -339,7 +349,9 @@ def plot_colorbars(df : pd.DataFrame, label_columns : typing.List[str], ax_list 
 	if preferred_sorting and len(preferred_sorting) > 0:
 		labels_alphabetical = sorted(legend_names, key=lambda x: x.lower())
 		#First sort by preferred sorting, then by alphabetical order
-		sort_idx = np.argsort([preferred_sorting.index(label) if label in preferred_sorting else 100+labels_alphabetical.index(label) for label in legend_names])
+		sort_idx = np.argsort(
+			[preferred_sorting.index(label) 
+    			if label in preferred_sorting else 100+labels_alphabetical.index(label) for label in legend_names])
 		legend_colors = [legend_colors[i] for i in sort_idx]
 		legend_names = [legend_names[i] for i in sort_idx]
 

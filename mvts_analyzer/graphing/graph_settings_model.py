@@ -93,9 +93,9 @@ class GraphSettingsModelData():
 		self._plot_color_column : str = ""
 
 		self.plot_filters= []
-		#When selecting data, how many millisecond gaps should also be selected 
+		#When selecting data, how many millisecond gaps should also be selected
 		# (e.g. t=1, t=3, then if GapFillMs=1000, t=2 would also be selected)
-		self._selection_gap_fill_ms_limval : LimitedValue = LimitedValue( 0, 10000, 0) 
+		self._selection_gap_fill_ms_limval : LimitedValue = LimitedValue( 0, 10000, 0)
 
 	def reset_all_settings_to_default(self): #Reset all to default
 		self.copy_attrs(GraphSettingsModelData())

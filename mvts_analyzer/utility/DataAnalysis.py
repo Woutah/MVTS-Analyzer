@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report
 import sklearn
 from sklearn import preprocessing, decomposition, cluster, model_selection #TODO: this is quite a heavy library, remove this from final release?
+import sklearn.cluster
 from matplotlib import cm
 import pandas as pd
 import numpy as np
@@ -18,7 +19,6 @@ import logging
 log = logging.getLogger(__name__)
 from mpl_toolkits.mplot3d import Axes3D
 
-from Utility.GeneralUtility import *
 
 def plot_subset_columns(dataset, columns, label_column_name = "Classification"):
 	fig = plt.figure(figsize = (10,10))
@@ -28,7 +28,7 @@ def plot_subset_columns(dataset, columns, label_column_name = "Classification"):
 	ax.set_zlabel(columns[2], fontsize = 15)
 	ax.set_title('Columns:' + columns[0] + " "+ columns[1] + " " + columns[2] , fontsize = 20) #set title
 	classes = dataset.df[label_column_name].unique() #get all classes
-	colors = cm.rainbow(np.linspace(0,1,len(classes))) #get new color for each one
+	colors = cm.rainbow(np.linspace(0,1,len(classes))) #get new color for each one #type: ignore
 	legend = []
 
 	for target, color in zip(classes,colors):
@@ -66,7 +66,7 @@ def get_PCA(df, components =3, scale=True ): #Scale: SCikit learn automatically 
 	return principal_df
 
 def plot_PCA_2D(dataset):
-	pca_result_df, _ = get_PCA(dataset.df[dataset.df.columns.difference(["Date", "Time", "Classification", "DateTime"])], components=2)
+	pca_result_df  = get_PCA(dataset.df[dataset.df.columns.difference(["Date", "Time", "Classification", "DateTime"])], components=2)
 	pca_result_df = pd.concat([pca_result_df, dataset.df['Classification']]) #append classification column to PCA plot
 	classes = range(int(pca_result_df['Classification'].max()) + 1) #        \
 	fig = plt.figure(figsize = (10,10))
@@ -79,7 +79,7 @@ def plot_PCA_2D(dataset):
 	ax.set_title('2 component PCA', fontsize = 20)
 	legend = []
 
-	colors = cm.rainbow(np.linspace(0,1,len(classes))) #get color for each one
+	colors = cm.rainbow(np.linspace(0,1,len(classes))) #get color for each one #type: ignore
 	for target, color in zip(classes,colors):
 		indicesToKeep = pca_result_df['Classification'] == target #Split on classification type
 		ax.scatter(pca_result_df.loc[indicesToKeep, 'PC1'],
@@ -93,7 +93,12 @@ def plot_PCA_2D(dataset):
 	plt.show()
 
 
-def plot_PCA_3D(dataframe : pd.DataFrame, plot_only_classes : typing.List[str] = [], dt_column = "DateTime", lbl_column = None, figurenr : int =5, figsize : tuple = (15, 10)):
+def plot_PCA_3D(dataframe : pd.DataFrame,
+		plot_only_classes : typing.List[str] = [],
+		dt_column = "DateTime",
+		lbl_column = None,
+		figurenr : int =5,
+		figsize : tuple = (15, 10)):
 	"""Plots a 3D PCA splot for the provided dataframe (all columns included).
 	Colors each dot according to its column
 
@@ -124,7 +129,7 @@ def plot_PCA_3D(dataframe : pd.DataFrame, plot_only_classes : typing.List[str] =
 
 	log.debug(f"Classes: {classes}")
 
-	colors = cm.rainbow(np.linspace(0,1,len(classes))) #get color for each one
+	colors = cm.rainbow(np.linspace(0,1,len(classes))) #get color for each one #type: ignore
 	legend = []
 	# colors = ['r', 'g', 'b']
 	for target, color in zip(classes,colors):
@@ -154,26 +159,12 @@ def plot_PCA_3D(dataframe : pd.DataFrame, plot_only_classes : typing.List[str] =
 	ax.grid()
 	fig.show()
 
-def get_center_values(dataset, class_names = None, label_column_name = "Classification"):
-
-	df_subset = dataset.df[dataset.df.columns.difference(["Date", "Time"])] #Take all columns except date time and classification
-
-	df_center_values = pd.DataFrame(columns = dataset.df.columns.difference(["Date", "Time"]))
-	df_stdev_values = pd.DataFrame(columns = dataset.df.columns.difference(["Date", "Time"]))
-
-	for classnr in dataset.df[label_column_name].unique(): #go over classes in dataset
-		for column in dataset.df.columns.difference(["Date", "Time", label_column_name]):
-			class_df = dataset.df.loc[dataset.df[label_column_name] == classnr] #get df of current class
-			class_df[class_df.columns.difference([label_column_name])] #Remove classification label
-			# df_center_values[[column]] = class_df[column].mean() #get mean value and save it
-			df_center_values.loc[classnr, column] = class_df[column].mean()
-			df_stdev_values.loc[classnr, column] = class_df[column].std()
-
-	df_center_values.to_excel(get_full_path("tests/Center Values.xlsx"))
-	df_stdev_values.to_excel(get_full_path("tests/Standard Deviations.xlsx"))
-	return
-
-def plot_df_scatter_class(df, ax, color_column="Classification", legend_label_prefix = "", class_name_dict={-1 : None}, markersize=20, plot_kwargs = {}):
+def plot_df_scatter_class(df,
+		ax,
+		color_column="Classification",
+		legend_label_prefix = "",
+		class_name_dict={-1 : None},
+		plot_kwargs = {}):
 
 	dims = len(df.columns) - 1 #Columns count - classification column (determines color)
 	data_cols = df.columns[ df.columns != color_column]
@@ -186,7 +177,7 @@ def plot_df_scatter_class(df, ax, color_column="Classification", legend_label_pr
 	# classes = range(int(df[color_column].max()) + 1)
 	classes = df[color_column].unique() #get all unique classes
 
-	colormap = cm.rainbow(np.linspace(0,1,len(classes))) #get color for each one
+	colormap = cm.rainbow(np.linspace(0,1,len(classes))) #get color for each one #type: ignore
 
 	class_color_dict = {}
 
@@ -202,15 +193,18 @@ def plot_df_scatter_class(df, ax, color_column="Classification", legend_label_pr
 			cur_label = legend_label_prefix + str(cur_class)
 			if cur_label in class_name_dict.keys(): #if label-translation
 				cur_label = class_name_dict[cur_label]
-			ax.scatter(cur_class_df[data_cols[0]].to_numpy(), cur_class_df[data_cols[1]].to_numpy(),cur_class_df[data_cols[2]].to_numpy(), **plot_kwargs, label=cur_label)
+			ax.scatter(
+				cur_class_df[data_cols[0]].to_numpy(),
+	      		cur_class_df[data_cols[1]].to_numpy(),
+				cur_class_df[data_cols[2]].to_numpy(), 
+				**plot_kwargs,
+				label=cur_label
+			)
 			ax.legend()
 
 		ax.set_xlabel(data_cols[0], fontsize = 10) #set labels
 		ax.set_ylabel(data_cols[1], fontsize = 10)
 		ax.set_zlabel(data_cols[2], fontsize = 10)
-
-		# ax.legend(cl)
-		# df.plot.scatter(data_cols[0], data_cols[1], data_cols[2], c=colors, ax=ax, **pd_plot_kwargs)
 	else:
 		print("Dims = 1, cant plot")
 
@@ -221,15 +215,11 @@ def plot_df_scatter_class(df, ax, color_column="Classification", legend_label_pr
 
 
 def k_cluster(df, n_clusters = 4):
-	# log.error("Implement")
-	df = df[df.columns.difference(["Date", "Time", "DateTime", "Classification"])] #Train on all (normalized) data except date, time, datetime and label
+	df = df[df.columns.difference(["Date", "Time", "DateTime", "Classification"])]
 	df = df.dropna() #remove nan values
-
 	model = sklearn.cluster.KMeans(n_clusters=n_clusters).fit(df) #Train using the trainset (split[0]), without labels
 	results = pd.Series(model.predict(df), name="Cluster", index=df.index) #create a result series with the nearest cluster, use df indexes
-
 	df['Cluster'] = results
-
 	return df
 
 
@@ -270,12 +260,12 @@ def k_means_classification(dataset, label_column_name= "Classification", n_clust
 			cluster_df = df_label_and_cluster[df_label_and_cluster["Cluster"] == cur_cluster] #get all datapoints for current cluster
 			cluster_label = cluster_df[label_column_name].mode() #do majority vote for cluster TODO: factor in class representation?
 			cluster_row = pd.DataFrame([[cur_cluster, cluster_label.iloc[0]]], columns=["Center", "Label Mode"])
-			df_center_labels = df_center_labels.append(cluster_row) #append row
+			df_center_labels = df_center_labels.append(cluster_row) #append row #type: ignore
 
 		#----------------------Testing-----------------------
 		#Get current predictions/labels in numpy array
 		cur_pred = pd.DataFrame(model.predict(test_split), columns=["Center"])
-		cur_pred = cur_pred.merge(df_center_labels, on=["Center"], how='left')["Label Mode"] #join to get majority-vote labels for each center
+		cur_pred = cur_pred.merge(df_center_labels, on=["Center"], how='left')["Label Mode"] #join to get majority-vote
 		cur_pred_np = np.array(cur_pred, dtype=int)
 
 		cur_act = split[1][label_column_name].reset_index(drop=True)
@@ -286,7 +276,7 @@ def k_means_classification(dataset, label_column_name= "Classification", n_clust
 		labels_predicted = np.append(labels_predicted, cur_pred_np) #create list with all predicted labels
 
 
-	labels_actual = [ dataset.classes[int(labels_actual[i])] for i in range(len(labels_actual))] #translate to int+classname
+	labels_actual = [ dataset.classes[int(labels_actual[i])] for i in range(len(labels_actual))] #translate to int+class
 	labels_predicted = [ dataset.classes[int(labels_predicted[i])] for i in range(len(labels_predicted))]
 
 	print(classification_report(labels_actual, labels_predicted))

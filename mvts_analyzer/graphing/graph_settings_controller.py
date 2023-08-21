@@ -568,7 +568,9 @@ class GraphSettingsController():
 
 
 	def set_fft_lim_to_view(self):
-
+		"""
+		Sets the fft line range to the current view (vertical)
+		"""
 		cur_ylim = self.plotter.canvas.ax_dict['main'].get_ylim()
 		bottom, top = cur_ylim
 		bottom = max(0.0, bottom) #Make sure bounded by 0/1
@@ -627,7 +629,7 @@ class GraphSettingsController():
 		cb.blockSignals(True)
 		cb.clear()
 		cb.addItems(plot_color_columns) #First set selection options
-		if self.model.plot_color_column not in plot_color_columns: #If plot color column not in option list -> try to select first usable column
+		if self.model.plot_color_column not in plot_color_columns: #If nexist color column -> select first usable column
 			if plot_color_columns is None or len(plot_color_columns) == 0:
 				self.model.plot_color_column = "" #If no columns -> set to None
 			else:
@@ -649,7 +651,7 @@ class GraphSettingsController():
 		cb.blockSignals(False)
 
 
-	def process_data_dfChanged(self): #TODO: create more specialized dfChanged methods (e.g. columnsChanged, labelColumnsChanged etc. )
+	def process_data_dfChanged(self): #TODO: create more specialized dfChanged methods?
 		"""
 		Updates all settings relating to the dataframe contents, is called when dataframe is changed.
 		"""
@@ -658,7 +660,9 @@ class GraphSettingsController():
 		#========== FFT ===========
 		fft_columns = self.data_model.get_fft_columns()
 		log.debug(f"FFT columns : {fft_columns}")
-		if self.model.fft_column is not None and self.model.fft_column != "" and self.model.fft_column not in fft_columns.keys():
+		if (self.model.fft_column is not None
+				and self.model.fft_column != ""
+				and self.model.fft_column not in fft_columns.keys()):
 			# self.model.fft_column = None #Reset fft column if it does not exist in new data
 			self.model.fft_line_range = LimitedRange()
 		try:
@@ -701,7 +705,7 @@ class GraphSettingsController():
 		new_x_limrange = self.data_model.get_col_limrange(self.model.x_axis) #Get new xmin/xmax
 		# if self.model.plot_domain_left < new_x_limrange.min_val
 		self.model.plot_domain_limrange.copy_limits(new_x_limrange)
-		if self.model.plot_domain_left == self.model.plot_domain_right:  #If new range does not overlap with old range -> set to min/max of new
+		if self.model.plot_domain_left == self.model.plot_domain_right:  #If new range does not overlap, set to minmax
 			self.model.plot_domain_left = new_x_limrange.min_val
 			self.model.plot_domain_right = new_x_limrange.max_val
 		self.process_data_label_columns_options()

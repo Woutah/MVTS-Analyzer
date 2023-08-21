@@ -1,3 +1,6 @@
+"""
+Implements DateTimeRange - a datetime range slider with 2 datetime-boxes
+"""
 import copy
 import datetime
 import logging
@@ -17,8 +20,8 @@ class DateTimeRange(QtWidgets.QWidget):
 	rangeEdited = QtCore.Signal(object) #[datetime, datetime]
 	rangeChanged = QtCore.Signal(object)
 
-	def __init__(self, enforce_limits = True, *args, **kwargs):
-		super(DateTimeRange, self).__init__(*args, **kwargs)
+	def __init__(self, enforce_limits = True, **kwargs):
+		super(DateTimeRange, self).__init__( **kwargs)
 
 		self._layout = QtWidgets.QVBoxLayout()
 		self._text_box_layout = QtWidgets.QHBoxLayout()
@@ -27,7 +30,7 @@ class DateTimeRange(QtWidgets.QWidget):
 
 		self.text_boxes = [
 			QtWidgets.QDateTimeEdit(calendarPopup=True), #type:ignore #Enables calendar popup - not in pyside doc?
-			QtWidgets.QDateTimeEdit(calendarPopup=True)#type:ignore 
+			QtWidgets.QDateTimeEdit(calendarPopup=True)#type:ignore
 		]
 
 		#Only trigger callback after submitting value
@@ -47,11 +50,11 @@ class DateTimeRange(QtWidgets.QWidget):
 		for curbox in self.text_boxes:
 			self._text_box_layout.addWidget(curbox)
 			curbox.dateTimeChanged.connect(self._boxes_changed)
-		
+
 
 		self._slider.endValueChanged.connect(self._slider_changed)
 		self._slider.startValueChanged.connect(self._slider_changed)
-		
+
 		self.setLayout(self._layout)
 		self._slider.setEnabled(True)
 		self.show()
@@ -65,34 +68,35 @@ class DateTimeRange(QtWidgets.QWidget):
 		if self._limited_range.min_val is None or self._limited_range.max_val is None:
 			log.debug("Min or max is none")
 			return
- 
-		# log.debug(f"Setting datetimeboxes to (limitedrange) {self._limited_range}")
-		# log.debug(f"Types: {type(self._limited_range.min_val)} {type(self._limited_range.left_val)} {type(self._limited_range.right_val)} {type(self._limited_range.max_val)}")
 
-		# self.blockSignals(True) #Temporarily block signals
-		self.text_boxes[0].blockSignals(True) #Temporarily block callbacks, this has to be done, otherwise the "changed" signal is emitted (it seems) resulting in an infinite update loop
+
+		#Temporarily block callbacks, this has to be done, otherwise the "changed" signal is emitted (it seems)
+		# resulting in an infinite update loop
+		self.text_boxes[0].blockSignals(True)
 		self.text_boxes[1].blockSignals(True)
 
 		# self.text_boxes[0].setMinimumDateTime()
 		self.text_boxes[1].setDateTime(self._limited_range.right_val) #type: ignore
 		self.text_boxes[0].setDateTime(self._limited_range.left_val) #type: ignore
-		# log.debug(f"After setting, the datetime in the boxes were: {self.text_boxes[0].dateTime()} { self.text_boxes[1].dateTime()}") #Make sure min >= max		
 		self.text_boxes[0].blockSignals(False)
 		self.text_boxes[1].blockSignals(False)
-		# self.blockSignals(False) #Resume signalling
 
 	def _slider_changed(self):
 		left,right = self._slider.getRange()
 		left_val, right_val = None, None
 
-		if self._limited_range is not None and self._limited_range.max_val is not None and self._limited_range.min_val is not None:
+		if (self._limited_range is not None
+				and self._limited_range.max_val is not None
+				and self._limited_range.min_val is not None):
 			if left is None or right is None:
 				return
-			left_val = (left / 100.0 * (self._limited_range.max_val - self._limited_range.min_val)) + self._limited_range.min_val
-			right_val =  (right / 100.0 * (self._limited_range.max_val - self._limited_range.min_val)) + self._limited_range.min_val
+			left_val = ((left / 100.0 * (self._limited_range.max_val - self._limited_range.min_val))
+				+ self._limited_range.min_val)
+			right_val =  ((right / 100.0 * (self._limited_range.max_val - self._limited_range.min_val))
+				+ self._limited_range.min_val)
 
 			if left_val > right_val:
-				left_val = right_val 
+				left_val = right_val
 
 			if self._enforce_limits: #If bounded by left/right max (and enforced)
 				left_val, right_val = self._limited_range.find_bounded(left_val, right_val)
@@ -117,7 +121,7 @@ class DateTimeRange(QtWidgets.QWidget):
 		self._slider.blockSignals(False)
 		self.blockSignals(False)
 
-	def _boxes_changed(self, x=None):
+	def _boxes_changed(self):
 		left, right = self.text_boxes[0].dateTime().toPython(), self.text_boxes[1].dateTime().toPython()
 
 
@@ -139,7 +143,7 @@ class DateTimeRange(QtWidgets.QWidget):
 		log.debug(f"Limited range became: {self._limited_range}")
 
 	def _update_box_limits(self):
-		#TODO: temporarily turn off limits? 
+		#TODO: temporarily turn off limits?
 		# log.debug(f"Updating box limits using self.limited_range: {self._limited_range}")
 
 
@@ -148,38 +152,42 @@ class DateTimeRange(QtWidgets.QWidget):
 
 		if self._enforce_limits:
 			self.text_boxes[0].setMinimumDateTime(
-				self._limited_range.min_val if self._limited_range.min_val is not None else datetime.datetime(2000, 1, 1) #type:ignore #Works with python datetime
-			) 
+				self._limited_range.min_val if self._limited_range.min_val is not None
+					else datetime.datetime(2000, 1, 1) #type:ignore #Works with python datetime
+			)
 			self.text_boxes[1].setMaximumDateTime(
-				self._limited_range.max_val if self._limited_range.max_val is not None else datetime.datetime(2200, 1, 1) #type:ignore #Works with python datetime
+				self._limited_range.max_val if self._limited_range.max_val is not None
+					else datetime.datetime(2200, 1, 1) #type:ignore #Works with python datetime
 			)
 
-			# if self.text_boxes[0].dateTime() > 
-
-		if self._limited_range.min_val is None or not self._enforce_limits or self.text_boxes[0].dateTime() > self._limited_range.min_val:
+		if (self._limited_range.min_val is None
+				or not self._enforce_limits
+				or self.text_boxes[0].dateTime() > self._limited_range.min_val):
 			self.text_boxes[1].setMinimumDateTime(self._limited_range.left_val) #Make sure min >= max #type:ignore
 
-		if self._limited_range.max_val is None or not self._enforce_limits or self.text_boxes[1].dateTime() < self._limited_range.max_val:
-			self.text_boxes[0].setMaximumDateTime(self._limited_range.right_val) #Make sure max <= min #type:ignore 
+		if (self._limited_range.max_val is None
+      			or not self._enforce_limits
+				or self.text_boxes[1].dateTime() < self._limited_range.max_val):
+			self.text_boxes[0].setMaximumDateTime(self._limited_range.right_val) #Make sure max <= min #type:ignore
 
 		self.text_boxes[0].blockSignals(False)
 		self.text_boxes[1].blockSignals(False)
 
-		# log.debug(f"Set box limits to {self.text_boxes[0].minimumDateTime()} -> {self.text_boxes[0].maximumDateTime()} &  {self.text_boxes[1].minimumDateTime()} -> {self.text_boxes[1].maximumDateTime()}")
-
-
 	def get_date_time(self) -> tuple[datetime.datetime | None, datetime.datetime | None]:
+		"""Returns the current datetime range-tuple"""
 		curdate = (self._limited_range.left_val, self._limited_range.right_val)
 		return curdate
-	
+
 	def set_all(self, limited_range : datastructures.LimitedRange):
+		"""Copy the data from another limited range to this one
+		Args:
+			limited_range (datastructures.LimitedRange): The limited range to copy
+		"""
 		log.debug(f"Setting all of datetimerange to {limited_range}")
 		self.blockSignals(True)
 		self._limited_range = copy.deepcopy(limited_range)
-		# log.debug(f"Resulted in: {self._limited_range}")
 		self._update_box_limits()
 		self._update_slider()
 		self._update_boxes()
 		self.blockSignals(False)
-
 		self.rangeChanged.emit((self._limited_range.left_val, self._limited_range.right_val))

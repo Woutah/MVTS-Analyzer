@@ -1,33 +1,39 @@
+"""
+Implements a tabbed matplotlib window - we can add multiple plots that are shown in a tabbed Qt-window
+"""
+
 # Largely based on https://stackoverflow.com/questions/37346845/tabbed-window-for-matplotlib-figures-is-it-possible - Superjax
 
 import matplotlib
+# import PySide6.QtCore.Qt 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import \
+    FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import \
+    NavigationToolbar2QT as NavigationToolbar
+from PySide6.QtWidgets import QMainWindow, QTabWidget, QVBoxLayout, QWidget
+
 # prevent NoneType error for versions of matplotlib 3.1.0rc1+ by calling matplotlib.use()
 # For more on why it's nececessary, see
 # https://stackoverflow.com/questions/59656632/using-qt5agg-backend-with-matplotlib-3-1-2-get-backend-changes-behavior
 matplotlib.use('qt5agg')
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QTabWidget, QVBoxLayout, QSplitter
-import PySide6.QtCore as QtCore
-# import PySide6.QtCore.Qt 
-import matplotlib.pyplot as plt
-import sys
-
 class TabbedMatplotlibWindow(QWidget):
+	"""
+	A qt-window to which we can add matpotlib-plots which are shown in separate tabs
+	"""
 	def __init__(self, parent=None):
-		# self.app = QApplication(sys.argv)
 		super().__init__(parent)
-		self.MainWindow = QMainWindow(self)
-		self.MainWindow.setWindowTitle("plot window")
+		self.main_window = QMainWindow(self)
+		self.main_window.setWindowTitle("plot window")
 		self.canvases = []
 		self.figure_handles = []
 		self.toolbar_handles = []
 		self.tab_handles = []
 		self.current_window = -1
 		self.tabs = QTabWidget()
-		self.MainWindow.setCentralWidget(self.tabs)
-		self.MainWindow.resize(1280, 900)
+		self.main_window.setCentralWidget(self.tabs)
+		self.main_window.resize(1280, 900)
 		# self.MainWindow.show()
 
 	def addPlot(self, title, figure):
@@ -83,7 +89,7 @@ class TabbedMatplotlibWindow(QWidget):
 
 
 	def show(self):
-		self.MainWindow.show()
+		self.main_window.show()
 	#     self.app.exec_()
 
 if __name__ == '__main__':
