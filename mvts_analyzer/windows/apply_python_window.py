@@ -145,9 +145,3 @@ class ApplyPythonWindow(QtWidgets.QMainWindow, object):
 		"""When cancel is clicked, closes the window"""
 		log.info("Clicked cancel, closing pythoncode window...")
 		self.close()
-
-
-
-
-
-

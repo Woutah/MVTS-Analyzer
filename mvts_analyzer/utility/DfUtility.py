@@ -1,15 +1,8 @@
-import pandas as pd
-import numpy as np
 import logging
+import numpy as np
+import pandas as pd
+
 log = logging.getLogger(__name__)
-from enum import Enum
-
-
-class DfSaveType(Enum): #TODO: is this handy? 
-    no_type = 0
-    from_file = 1
-    from_database = 2
-
 
 
 def get_fft_columns(dataframe : pd.DataFrame | None) -> dict[str, int]:
@@ -115,7 +108,7 @@ def load_dataframe_using_file_extension(file_source : str):
 				#Check if first value is a datetime
 				if isinstance(new_df[col].iloc[0], str):
 					try:
-						temp = pd.to_datetime(new_df[col].iloc[0])
+						pd.to_datetime(new_df[col].iloc[0]) #Attempt with first element -> if this fails, assume no dtcol
 						new_df[col] = pd.to_datetime(new_df[col])
 					except:
 						pass
@@ -124,7 +117,7 @@ def load_dataframe_using_file_extension(file_source : str):
 			raise NotImplementedError(f"Filetype {filetype} not implemented for loading dataframes...")
 
 		return True, f"Succesfully loaded dataframe form {file_source}", new_df
-	except Exception as ex:
+	except Exception as ex: #pylint: disable=broad-exception-caught
 		msg = f"Could not append data from selected file ({file_source}): {ex}"
 		log.warning(msg)
 		return False, msg, None

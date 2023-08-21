@@ -352,7 +352,7 @@ class GraphData(QtCore.QObject):
 		try:
 			self._df[column] = self._df[column].replace(transform_dict)
 		except Exception as err: #pylint: disable=broad-exception-caught
-			return False, err
+			return False, str(err)
 
 		returnmsg = [f"{key} -> {val}" for key,val in transform_dict.items()]
 

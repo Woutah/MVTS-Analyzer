@@ -1,12 +1,11 @@
 
 """Small implementation of a labeling widget using MVC, when model options are set, they are updated immediately
-20220110
 """
-
-
-import typing
-from PySide6 import QtCore, QtWidgets
 import logging
+import typing
+
+from PySide6 import QtCore, QtWidgets
+
 log = logging.getLogger(__name__)
 
 class LabelerWindowView(QtWidgets.QWidget):

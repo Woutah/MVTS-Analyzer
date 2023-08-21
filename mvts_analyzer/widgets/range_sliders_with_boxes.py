@@ -80,6 +80,10 @@ class RangeSlidersWithBoxes(QtWidgets.QWidget):
 		self._update_all()
 
 	def set_text_parser(self, text_parser):
+		"""Set the text parser - used to convert text to value
+		Args:
+			text_parser (typing.Callable): A function that takes a string and returns a value
+		"""
 		self._text_parser = text_parser
 
 
@@ -131,8 +135,8 @@ class RangeSlidersWithBoxes(QtWidgets.QWidget):
 			left (int): the new value of the left slider
 		"""
 		log.debug(f"Left slider moved to {left / 100.0}")
-		if (self._limited_range is not None 
-      			and self._limited_range.max_val is not None 
+		if (self._limited_range is not None
+      			and self._limited_range.max_val is not None
 				and self._limited_range.min_val is not None):
 			#Case to same type as user-provided limrange (float/int/double etc.)
 			self._limited_range.left_val =type(self._limited_range.min_val)(left / 100.0 *
@@ -150,8 +154,8 @@ class RangeSlidersWithBoxes(QtWidgets.QWidget):
 			right (int): The new value of the right slider
 		"""
 		log.debug(f"Right slider moved to {right / 100.0} & {right/100}")
-		if (self._limited_range is not None 
-      			and self._limited_range.max_val is not None 
+		if (self._limited_range is not None
+      			and self._limited_range.max_val is not None
 				and self._limited_range.min_val is not None):
 			self._limited_range.right_val = type(self._limited_range.max_val)(
 				right / 100.0 * (self._limited_range.max_val - self._limited_range.min_val) + self._limited_range.min_val
@@ -189,4 +193,3 @@ class RangeSlidersWithBoxes(QtWidgets.QWidget):
 		self._update_slider()
 		self.rangeChanged.emit((self._limited_range.left_val, self._limited_range.right_val))
 		log.debug(f"Setting rangeslider resulted in: {self._limited_range}")
-

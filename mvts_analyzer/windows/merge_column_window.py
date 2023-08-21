@@ -11,18 +11,18 @@ log = logging.getLogger(__name__)
 class MergeColumnWindow():
 
 	def __init__(self, data_model : GraphData, parent=None) -> None:
-		
+
 		self.ui = Ui_MergeColumnWindow()
 		self.data_model = data_model
 		self.window = QtWidgets.QMainWindow(parent=parent)
 		self.ui.setupUi(self.window)
 		self.ui.returnMsgLabel.setText("")
- 
+
 
 		# self.ui.columnOptionsCombobox.
 
 		# self.data_model.dfColumnsChanged.connect(lambda *_: self.reload_all_options())
-		
+
 		self.data_model.dfChanged.connect(lambda *_: self.reload_all_options())
 		self.window.show()
 
@@ -56,7 +56,7 @@ class MergeColumnWindow():
 
 		log.info(f"Trying to merge {src} -> {dest}		Mode={mergemode}, preserving={preserve}")
 
-		success, msg = self.data_model.merge_columns(src, dest, mergemode, preserve, astype=astype)
+		success, msg = self.data_model.merge_columns(src, dest, mergemode, preserve, astype=astype) #type: ignore
 
 		self.effect = QtWidgets.QGraphicsOpacityEffect()
 		self.animation = QtCore.QPropertyAnimation(self.effect, b"opacity")
@@ -74,44 +74,30 @@ class MergeColumnWindow():
 			self.ui.returnMsgLabel.setStyleSheet("color: red")
 
 
-	# def reload_rename_options(self):
-	# 	self.set_column_options(self.model.get_lbl_columns)
-
-	# def reload_column_options(self):
-	# 	self.set_column_options(self.model.get_lbl_columns)
-
-	def get_rename_options(self):
-		curtext = self.ui.columnOptionsCombobox.currentText() 
-		options = []
-		try: 
-			options = self.model.df[curtext].unique()
-		except KeyError as err:
-			pass
-	
-		return options
-		
-
-		# if curtext in self.model.get_column_names:
-		# 	self.model.
-
 	def reload_column_options(self):
+		"""
+		Reload the combobox options for the columns from the dataframe
+		"""
 		self.ui.sourceColumnCombobox.blockSignals(True)
 		self.ui.destinationColumnCombobox.blockSignals(True)
-		# lbls = self.model.get_lbl_columns()
 		cols = self.data_model.get_column_names()
 		self.set_combobox_options(self.ui.sourceColumnCombobox, cols)
-		self.set_combobox_options(self.ui.destinationColumnCombobox, cols + [None])		
+		self.set_combobox_options(self.ui.destinationColumnCombobox, cols + [None])
 		self.ui.sourceColumnCombobox.blockSignals(False)
 		self.ui.destinationColumnCombobox.blockSignals(False)
 		# self.set_combobox_options(self.ui.fromCombobox, self.)
-		
+
 	def reload_all_options(self):
+		"""Reloads all combobox options"""
 		self.reload_column_options()
 
 
 
 	#========= Setting combobox options ===============
-	def set_combobox_options(self, combobox, new_options : typing.List):
+	def set_combobox_options(self, combobox : QtWidgets.QComboBox, new_options : typing.List):
+		"""
+		Utility function to set the options of a combobox after clearing it
+		"""
 		log.debug(f"Setting combobox to {new_options}")
 		cur_choice = combobox.currentText()
 		combobox.blockSignals(True)
@@ -120,13 +106,3 @@ class MergeColumnWindow():
 		if cur_choice in new_options: #If choice still available
 			combobox.setCurrentText(cur_choice)
 		combobox.blockSignals(False)
-
-
-
-	# def set_column_options(self, column_options : typing.List):
-	# 	log.debug(f"Setting RenameLabelDialog column options to {column_options}")
-	# 	cur_choice = self.ui.fromCombobox.currentText()
-	# 	self.ui.columnOptionsCombobox.clear() #Reset items
-	# 	self.ui.columnOptionsCombobox.addItems(column_options)
-
-	

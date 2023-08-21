@@ -1,5 +1,13 @@
+"""
+Implements:
+MplCanvas - Wrapper around matplotlib figure-canvas, used to manage axes and twinxes for a stacked plot for QPlotter
+QPlotter - Uses the datamodel and settingsmodel to plot the data in the desired way
 
+And:
+DragDetector - Manages the dragging of a rectangle, self.drag_start and self.drag_end correspond to the ax coordinate
 
+"""
+#pylint: disable=too-many-lines
 
 import datetime
 import logging
@@ -56,7 +64,7 @@ class DragDetector():
 			toolbar : NavigationToolbar
 		):
 
-		self.ax = ax
+		self.ax = ax #pylint: disable=invalid-name
 		self.connect(canvas)
 		self.canvas = canvas
 		self.rect = rect
@@ -116,8 +124,7 @@ class MplCanvas(FigureCanvasQTAgg):
 	"""
 
 	def __init__(self): #, parent=None, width=5, height=4, dpi=100):
-		# super(MplCanvas, self).__init__()
-		fig, ax = plt.subplots(1)
+		fig, ax = plt.subplots(1) #pylint: disable=invalid-name
 		super().__init__(fig)
 		self.figure = fig
 		self.ax_sizes = { "main" : 10}
@@ -261,7 +268,7 @@ class MplCanvas(FigureCanvasQTAgg):
 
 	def remove_twinxes(self):
 		"""Remove all twinxes from the plot"""
-		for ax_name in self.twinxes:
+		for ax_name in self.twinxes: #pylint: disable=consider-using-dict-items
 			twinx_names =  list(self.twinxes[ax_name].keys())
 			for twinx_name in twinx_names:
 				del self.twinxes[ax_name][twinx_name]
@@ -400,9 +407,10 @@ class QPlotter(QtWidgets.QWidget):
 		fft_cmap[:, -1] = self.settings_model.fft_transparency #type: ignore
 		fft_cmap = matplotlib.colors.ListedColormap(fft_cmap) #type: ignore
 
-		X, Y, Z = self.fft_data
+		X, Y, Z = self.fft_data #pylint: disable=invalid-name
 		log.debug(f"Creating mesh of dimensions: {len(X)}")
-		mesh = self.canvas.get_axis("main").pcolormesh(X, Y, Z, vmax=1.0, cmap=fft_cmap, linewidth=0, rasterized=True)#, cmap=cMap)
+		mesh = self.canvas.get_axis("main").pcolormesh(
+			X, Y, Z, vmax=1.0, cmap=fft_cmap, linewidth=0, rasterized=True)#, cmap=cMap)
 		mesh.set_edgecolor('face')
 
 
@@ -462,7 +470,7 @@ class QPlotter(QtWidgets.QWidget):
 		# print(fft_df[self.settings_model.fft_column].tolist())
 		fft_z = np.array(
 			fft_df[self.settings_model.fft_column].tolist()
-		)[:, self.settings_model.fft_line_range_left : self.settings_model.fft_line_range_right] #DO this this way, as fft_df[self.
+		)[:, self.settings_model.fft_line_range_left : self.settings_model.fft_line_range_right]
 
 		# fft_column] creates an array of lists
 		fft_z = np.swapaxes(fft_z, 0, 1)
@@ -525,7 +533,8 @@ class QPlotter(QtWidgets.QWidget):
 
 		all_classes_dict = { item : nr for (nr,item) in enumerate(all_classes)}
 		all_classes = np.array(list(all_classes)) #Set back to numpy for indexing options
-		self.canvas.add_axes(label_columns, [i+1 for i in range(len(label_columns))], [0.3 for i in range(len(label_columns))])
+		self.canvas.add_axes(
+			label_columns, [i+1 for i in range(len(label_columns))], [0.3 for i in range(len(label_columns))])
 		color_map = matplotlib.colors.ListedColormap(colors) #type: ignore
 
 

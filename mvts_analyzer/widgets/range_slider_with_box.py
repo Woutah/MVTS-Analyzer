@@ -111,8 +111,9 @@ class RangeSliderWithBox(QtWidgets.QWidget):
 			self._slider.setValue(50)
 		else:
 			self._slider.setValue(int(
-					(bounded_val - self._limited_value.min_val)/(self._limited_value.max_val - self._limited_value.min_val) * 100.0
-				) #type:ignore #We already checked for None
+					(bounded_val - self._limited_value.min_val)/ #type:ignore
+					(self._limited_value.max_val - self._limited_value.min_val) * 100.0 #type:ignore
+				)  #We already checked for None
 			)
 		self.blockSignals(False)
 		self._slider.blockSignals(False)
