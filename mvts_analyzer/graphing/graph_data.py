@@ -256,7 +256,7 @@ class GraphData(QtCore.QObject):
 			return list(self._df.columns)
 
 	@property
-	def df(self):
+	def df(self): #pylint: disable=invalid-name
 		"""Return _df NOTE: this is not a copy!!!"""
 		return self._df
 
@@ -563,5 +563,3 @@ class GraphData(QtCore.QObject):
 		else:
 			self._df = new_df #Copy?
 		self.dfChanged.emit() #Broadcast
-
-

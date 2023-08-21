@@ -1,6 +1,6 @@
-# """
-# The main window from which all other windows can be accessed
-# """
+"""
+This module implements the main window from which all other windows can be accessed
+"""
 import importlib
 import importlib.util
 import logging
@@ -29,11 +29,13 @@ log = logging.getLogger(__name__)
 
 class MainWindow(QtWidgets.QMainWindow):
 	"""The main window from which all the other windows can be accessed"""
-	def __init__(self, graph_model_args = {}, *args, **kwargs):
+	def __init__(self, graph_model_args = None, *args, **kwargs):
 		super(MainWindow, self).__init__(*args, **kwargs)
+		if graph_model_args is None:
+			graph_model_args = {}
 		log.debug("Initializing main window")
 
-		self.ui = Ui_MainWindow()
+		self.ui = Ui_MainWindow() #pylint: disable=invalid-name
 		self.ui.setupUi(self)
 
 		#Launch in (semi) fullscreen mode
@@ -47,7 +49,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.plotter = QPlotter(self.graph_data_model, self.graph_settings_model)
 		self.graph_view = GraphSettingsView(self.plotter) # Create View (using created plotter)
 		self.setCentralWidget(self.graph_view)
-		self.graph_controller = GraphSettingsController(self.graph_data_model, self.graph_settings_model, self.graph_view, self.plotter)
+		self.graph_controller = GraphSettingsController(
+			self.graph_data_model, self.graph_settings_model, self.graph_view, self.plotter)
 
 
 		self.menu_actions = []
@@ -65,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.ui.actionRename_Label.triggered.connect(self.open_label_rename_window)
 		self.ui.actionPython_Code.triggered.connect(self.open_python_window)
 		self.ui.actionSave_Figure_As.triggered.connect(self.plotter.canvas.open_save_popup)
-		self.ui.actionCopy_Figure_To_Clipboard.triggered.connect(self.graph_controller.copy_plot_to_clipboard) #TODO: move to plotwrapper?
+		self.ui.actionCopy_Figure_To_Clipboard.triggered.connect(self.graph_controller.copy_plot_to_clipboard)
 		self.ui.actionAppend_From_File.triggered.connect(self.graph_controller.append_df_from_file)
 		self.ui.actionOpenMergeLabelColumnWindow.triggered.connect(self.open_merge_label_column_window)
 		self.ui.actionOpen_View_Copy.triggered.connect(lambda x: self.open_view_copy())
@@ -110,7 +113,8 @@ class MainWindow(QtWidgets.QMainWindow):
 			if os.path.isdir(path) and cur_item != "__pycache__": #Skip __pycache__ folder
 				new_menu = QtWidgets.QMenu(cur_menu) #Folder = Action menu
 				new_menu.setTitle(cur_item)
-				self._rec_repopulate_python_appliable_menu(os.path.join(cur_path, cur_item), cur_depth=cur_depth+1, cur_menu=new_menu)
+				self._rec_repopulate_python_appliable_menu(
+					os.path.join(cur_path, cur_item), cur_depth=cur_depth+1, cur_menu=new_menu)
 				cur_menu.addAction(new_menu.menuAction())
 			else:
 				if len(cur_item.rsplit(".", 1)) < 2 or cur_item.rsplit(".", 1)[1] != "py": #Skip non-python cur_items
@@ -119,7 +123,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				newaction = QtGui.QAction(name)
 				self.menu_actions.append(newaction)
 				cur_menu.addAction(newaction)
-				newaction.triggered.connect(lambda *_, path=path, name=name: self.run_python_appliable(path, name))
+				newaction.triggered.connect(lambda *_, path=path, name=name: self.run_python_appliable(path))
 
 
 
@@ -146,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		try:
 			spec = importlib.util.spec_from_file_location("newmodule", path) #Reload module each time
 			if spec is None:
-				raise Exception("Could not load spec of module.")
+				raise ModuleNotFoundError("Could not load spec of python appliable (module).")
 			module = importlib.util.module_from_spec(spec)
 			# sys.modules["LoadedModule"] = module
 			spec.loader.exec_module(module) #type: ignore
@@ -281,21 +285,13 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.close()
 			log.info("Also attempting to close all graph views!")
 			for wind in self.graph_view_windows:
-				try:
-					wind.close()
-				except Exception as err:
-					log.warning(f"Error when closing graph view window: {err}")
-					pass
+				wind.close()
 		else:
 			a0.ignore() #Else - do not close
 
 if __name__=="__main__":
-	import sys
 	app = QtWidgets.QApplication(sys.argv)
 	mainwin = QtWidgets.QMainWindow()
-
-
-
 	w = MainWindow()
 	w.show()
 	app.exec_()
