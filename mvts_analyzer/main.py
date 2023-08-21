@@ -19,7 +19,6 @@ def main(debug_level=logging.INFO):
 	"""
 	print("Started main function")
 	plt.ioff() #Dont just spit out plots/turn off interactive plotting, but keep them in memory
-	#TODO: Note that it is possible that this will break some things??
 	formatter = logging.Formatter("[{pathname:>90s}:{lineno:<4}]  {levelname:<7s}   {message}", style='{')
 	handler = logging.StreamHandler()
 	handler.setFormatter(formatter)
