@@ -610,9 +610,9 @@ class QPlotter(QtWidgets.QWidget):
 			# 		update_annot(x, y, label, annot)
 
 			def format_coord(x_coord, y_coord, original_labels, original_dts): #pylint: disable=unused-argument
-				dt = matplotlib.dates.num2date(x_coord).replace(tzinfo=None)
-				label = original_labels[original_dts.sub(dt).abs().idxmin()]
-				return f"x={dt} 		class={label}"
+				py_dt = matplotlib.dates.num2date(x_coord).replace(tzinfo=None)
+				label = original_labels[original_dts.sub(py_dt).abs().idxmin()]
+				return f"x={py_dt} 		class={label}"
 
 
 
@@ -625,7 +625,7 @@ class QPlotter(QtWidgets.QWidget):
 			# 		annot=annot: on_axis_hover(x, ax, original_labels, original_dts, annot)
 			# )
 			# self.canvas.mpl_connect("axes_leave_event", lambda x, annot=annot: on_axis_leave(x, annot))
-			ax.format_coord = (lambda x,y, original_labels=dt_lbl_original[label_col], original_dts=dt_lbl_original['DateTime']: #pylint: disable=cell-var-from-loop
+			ax.format_coord = (lambda x,y, original_labels=dt_lbl_original[label_col], original_dts=dt_lbl_original['DateTime']:
 				format_coord(x,y, original_labels=original_labels, original_dts=original_dts )) #pylint: disable=cell-var-from-loop
 
 			# annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
@@ -660,7 +660,7 @@ class QPlotter(QtWidgets.QWidget):
 
 
 
-	def _recolor_selection_scatter(self, ax, ind_selection, collection, base_colors): #pylint: disable=unused-argument
+	def _recolor_selection_scatter(self, plt_ax, ind_selection, collection, base_colors): #pylint: disable=unused-argument
 		"""Recolor the selection in a scatterplot
 		"""
 		face_color = base_colors.copy()
@@ -685,7 +685,7 @@ class QPlotter(QtWidgets.QWidget):
 		if len(nextselection) == 0:
 			face_colors[nextselection] = base_colors[nextselection]
 		else:
-			face_colors[:, :3] = 0.75 * (1.0 - face_colors[:, :3]) + face_colors[:, :3] #Lighten everything except selected points
+			face_colors[:, :3] = 0.75 * (1.0 - face_colors[:, :3]) + face_colors[:, :3] #Brighten except selected points
 			# fc[ind_selection] = base_colors[ind_selection]
 			face_colors[nextselection] = base_colors[nextselection]
 
@@ -699,7 +699,7 @@ class QPlotter(QtWidgets.QWidget):
 
 	def _set_selection(self, loc_selection):
 		self.cur_pd_selection = set(loc_selection)
-		for ax_idx, (ax, loc, colors) in enumerate(zip(self.data_axes, self.data_locs, self.data_colors)):
+		for ax_idx, (ax, loc, colors) in enumerate(zip(self.data_axes, self.data_locs, self.data_colors)): #pylint: disable=invalid-name
 			plot_ind = []
 
 			for i in range(len(loc)): #pylint: disable=consider-using-enumerate
@@ -728,7 +728,7 @@ class QPlotter(QtWidgets.QWidget):
 			try:
 				self.legend_names = set([])
 				for name in  self.data_model.df[color_col].unique(): #type: ignore
-					if type(name) == float and np.isnan(name) or pd.isna(name): #Treat NaN as None
+					if isinstance(name, float) and np.isnan(name) or pd.isna(name): #Treat NaN as None
 						self.legend_names.add(None)
 						continue #Don't add nan
 					self.legend_names.add(name)
@@ -745,22 +745,19 @@ class QPlotter(QtWidgets.QWidget):
 			#get new color for each class
 			col_colors = matplotlib.cm.rainbow(np.linspace(0,1,len(self.legend_names))) #pylint: disable=no-member #type: ignore
 
-		assert len(col_colors) >= len(self.legend_names) #This has gone wrong before.... Make sure there are enough colors otherwise the dictionary will fail in a later stage
+		assert len(col_colors) >= len(self.legend_names), "Too many items in the legend - not enough colors for legend."
 
 		color_dict = {name : np.array(color) for name, color in zip(self.legend_names, col_colors)}
 		color_dict[None] = np.array([.8, .8, 0.8, 1]) #type: ignore
-		# color_dict[None] = "kaas"
 
 		self.legend_colors_dict = color_dict
-		# self.legend_colors_dict = [color for color in color_dict.values()]
 
 		log.debug(f"Trying to plot columns: {list(self.settings_model.plot_list)}")
-		# for col, col_color in zip(self.plot_data.cur_plot_df.columns, col_colors): #go over columns (and give each one a color)
 
 
 
 		minmaxes = []
-		XYs = []
+		XYs = [] #pylint: disable=invalid-name
 		self.data_locs = []
 		self.data_axes = []
 		self.collections = [] #in the case of scatterplots

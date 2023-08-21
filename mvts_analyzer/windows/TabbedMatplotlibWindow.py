@@ -2,10 +2,11 @@
 Implements a tabbed matplotlib window - we can add multiple plots that are shown in a tabbed Qt-window
 """
 
-# Largely based on https://stackoverflow.com/questions/37346845/tabbed-window-for-matplotlib-figures-is-it-possible - Superjax
+#Largely based on https://stackoverflow.com/questions/37346845/tabbed-window-for-matplotlib-figures-is-it-possible
+
 
 import matplotlib
-# import PySide6.QtCore.Qt 
+# import PySide6.QtCore.Qt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import \
     FigureCanvasQTAgg as FigureCanvas
@@ -36,7 +37,8 @@ class TabbedMatplotlibWindow(QWidget):
 		self.main_window.resize(1280, 900)
 		# self.MainWindow.show()
 
-	def addPlot(self, title, figure):
+	def add_plot(self, title, figure):
+		"""Add a plot to the window - creates a new tab"""
 		new_tab = QWidget()
 		layout = QVBoxLayout()
 		new_tab.setLayout(layout)
@@ -54,7 +56,12 @@ class TabbedMatplotlibWindow(QWidget):
 		self.figure_handles.append(figure)
 		self.tab_handles.append(new_tab)
 
-	def addPlots(self, title, figures, stretches = []):
+	def add_plots(self, title, figures, stretches = None):
+		"""
+		Add multiple plots to the window - creates a new tab for each one
+		"""
+		if stretches is None:
+			stretches = []
 		new_tab = QWidget()
 		layout = QVBoxLayout()
 		new_tab.setLayout(layout)
@@ -84,7 +91,7 @@ class TabbedMatplotlibWindow(QWidget):
 			self.canvases.append(new_canvas)
 			self.figure_handles.append(figure)
 			self.tab_handles.append(new_tab)
-		
+
 		self.tabs.addTab(new_tab, title)
 
 
@@ -102,10 +109,10 @@ if __name__ == '__main__':
 	f = plt.figure()
 	ysin = np.sin(x)
 	plt.plot(x, ysin, '--')
-	pw.addPlot("sin", f)
+	pw.add_plot("sin", f)
 
 	f = plt.figure()
 	ycos = np.cos(x)
 	plt.plot(x, ycos, '--')
-	pw.addPlot("cos", f)
+	pw.add_plot("cos", f)
 	pw.show()

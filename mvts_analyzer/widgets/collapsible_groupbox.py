@@ -1,15 +1,24 @@
-from PySide6 import QtWidgets, QtCore
-
+"""
+Implements CollapsibleGroupBoxLayout - A groupbox that collapses when unchecked
+"""
 import logging
-log = logging.getLogger(__name__)
-import datetime
 import typing
+from PySide6 import QtCore, QtWidgets
+
+log = logging.getLogger(__name__)
+
+#pylint: disable=invalid-name
 
 class CollapsibleGroupBoxLayout(QtWidgets.QGroupBox):
+	"""
+	Based on QT's QGroupBox, but collapses when unchecked
+	"""
 
-
-	def __init__(self, groupbox_name, layout: typing.Literal[QtCore.Qt.Orientation.Vertical, QtCore.Qt.Orientation.Horizontal] = QtCore.Qt.Orientation.Vertical, *args, **kwargs):
-		super().__init__(groupbox_name, *args,**kwargs)
+	def __init__(self,
+	    	groupbox_name,
+			layout: typing.Literal[QtCore.Qt.Orientation.Vertical,
+			  QtCore.Qt.Orientation.Horizontal] = QtCore.Qt.Orientation.Vertical, **kwargs):
+		super().__init__(groupbox_name, **kwargs)
 
 		self.frame = QtWidgets.QFrame()
 		if layout == QtCore.Qt.Orientation.Horizontal:
@@ -22,17 +31,18 @@ class CollapsibleGroupBoxLayout(QtWidgets.QGroupBox):
 		self.setCheckable(True)
 		self.toggled.connect(self.toggleHide)
 
-		self.layout = QtWidgets.QVBoxLayout()
-		self.layout.addWidget(self.frame)
-		self.setLayout(self.layout)
+		self.main_layout = QtWidgets.QVBoxLayout()
+		self.main_layout.addWidget(self.frame)
+		self.setLayout(self.main_layout)
 
 		self.toggleHide(self.isChecked()) #Toggle to current state
 
 	def addWidget(self, widget):
+		"""Add widget to layout"""
 		self.group_layout.addWidget(widget)
-	
-	def toggleHide(self, on : bool):
 
+	def toggleHide(self, on : bool):
+		"""Toggle hide/show"""
 		if on:
 			self.frame.show()
 		else:

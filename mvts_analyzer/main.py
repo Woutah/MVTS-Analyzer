@@ -1,5 +1,5 @@
 """
-The main entry point - we launch the app from here (optionally with arguments)	
+The main entry point - we launch the app from here (optionally with arguments)
 """
 
 import logging
@@ -19,8 +19,8 @@ def main(debug_level=logging.INFO):
 	"""The main function, starts the app and parses arguments
 	"""
 	print("Started main function")
-	plt.ioff() #Dont just spit out plots/turn off interactive plotting, but keep them in memory 
-	#TODO: Note that it is possible that this will break some things?? 
+	plt.ioff() #Dont just spit out plots/turn off interactive plotting, but keep them in memory
+	#TODO: Note that it is possible that this will break some things??
 	formatter = logging.Formatter("[{pathname:>90s}:{lineno:<4}]  {levelname:<7s}   {message}", style='{')
 	handler = logging.StreamHandler()
 	handler.setFormatter(formatter)
@@ -30,12 +30,11 @@ def main(debug_level=logging.INFO):
 	logging.getLogger('matplotlib').setLevel(logging.INFO)
 	logging.getLogger('fontmanager').setLevel(logging.INFO)
 	logging.getLogger('asyncua').setLevel(logging.WARN)
-	# logging.getLogger('asyncua').setLevel(logging.WARN)
 	logging.getLogger('numba').setLevel(logging.WARN)
 	logging.getLogger('apscheduler').setLevel(logging.ERROR)
 
 	parser = argparse.ArgumentParser(description='Tool arguments')
-	parser.add_argument("-f", "--file", 
+	parser.add_argument("-f", "--file",
 						help="Path to initially loaded data (.xlsx/.csv or pickled pd.dataframe)",
 						default=None
 					)
@@ -56,21 +55,22 @@ def main(debug_level=logging.INFO):
 	args = parser.parse_args()
 
 	app = QtWidgets.QApplication(sys.argv)
-	
+
 	if args.dark_mode:
-		app.setStyleSheet(open(Paths.DarkStyleSheetFilePath).read())
+		app.setStyleSheet(open(Paths.DarkStyleSheetFilePath, encoding="utf-8").read())
 		plt.style.use('dark_background')
 
-	w = MainWindow(graph_model_args={"df_path": args.file})
+	main_win = MainWindow(graph_model_args={"df_path": args.file})
 	if args.use_monitor:
 		#Launch on monitor with given index
 		monitor = app.screens()[args.launch_on_monitor].geometry()
 	else: #Otherwise launch on primary monitor
 		monitor = QtGui.QGuiApplication.primaryScreen().geometry()
 
-	w.setGeometry( int(0.05* monitor.width()), int(0.05* monitor.height()), int(0.9*monitor.width()), int(0.9*monitor.height()))
-	w.move(monitor.left(), monitor.top())
-	w.show()
+	main_win.setGeometry(
+		int(0.05* monitor.width()), int(0.05* monitor.height()), int(0.9*monitor.width()), int(0.9*monitor.height()))
+	main_win.move(monitor.left(), monitor.top())
+	main_win.show()
 	app.exec_()
 	log.info("End of main reached... Exiting...")
 

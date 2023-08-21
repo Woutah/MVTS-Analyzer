@@ -1,3 +1,7 @@
+"""
+Implements RenameLabelWindow - A window in which we can quickly select annotations in a column and quickly rename
+them to something else.
+"""
 import logging
 import typing
 
@@ -12,7 +16,7 @@ class RenameLabelWindow():
 	"""Widget/window used for renaming labels within a column of a dataframe"""
 
 	def __init__(self, graph_data_model : GraphData, parent=None) -> None:
-		self.ui = Ui_RenameLabelWindow()
+		self.ui = Ui_RenameLabelWindow() #pylint: disable=invalid-name
 		self.graph_data_model = graph_data_model
 		self.window = QtWidgets.QMainWindow(parent=parent)
 		self.ui.setupUi(self.window)
@@ -26,6 +30,11 @@ class RenameLabelWindow():
 
 		self.reload_all_options()
 		self.ui.columnOptionsCombobox.currentTextChanged.connect(self.column_selection_changed)
+
+
+		#To make sure animation is not garbage collected
+		self.effect = None
+		self.animation = None
 
 	def column_selection_changed(self, new_selection : str):
 		"""On column selection changed, reload the rename options

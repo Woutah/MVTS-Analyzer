@@ -419,8 +419,8 @@ class GraphSettingsController():
 			return
 
 		if dt_column_df in df.columns: #If datetime specified
-			maxval = df.max(axis=0)["DateTime"] # get most recent entry
-			minval = df.min(axis=0)["DateTime"] # get oldest entry
+			maxval = df["DateTime"].max(axis=0) # get most recent entry
+			minval = df["DateTime"].min(axis=0) # get oldest entry
 			minval = minval.to_pydatetime(minval)
 			maxval = maxval.to_pydatetime(maxval)
 			loadspec_diag = LoadTypeSelectionDialog(min_db_entrydate=minval, max_dbentry_date=maxval)
@@ -435,7 +435,7 @@ class GraphSettingsController():
 			return
 
 		if dt_column_df in df.columns:
-			mask = (df[dt_column_df] >=  loadspecs.from_time) & (df[dt_column_df] <= loadspecs.to_time)
+			mask = (df[dt_column_df] >=  loadspecs.from_time) & (df[dt_column_df] <= loadspecs.to_time) #type: ignore
 			df = df[mask]
 		self.data_model.load_existing_df(
 			df, loadspecs.main_load_type == MainLoadType.APPEND,

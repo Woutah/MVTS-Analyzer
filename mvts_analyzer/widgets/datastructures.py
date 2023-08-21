@@ -1,3 +1,9 @@
+"""
+Implements several datastructures used in the GUI:
+
+LimitedValue: A value with min/max and current value
+LimitedRange: A range with min/max and 2 values (left (min value) and right (max value))
+"""
 from __future__ import annotations
 import logging
 log = logging.getLogger(__name__)
@@ -125,14 +131,15 @@ class LimitedRange():
 
 	@enforce_limits.setter
 	def enforce_limits(self, enforce : bool):
-		"""Whether to enforce left/right value to fall within min/max values, if turned on, left/right are immmediately updated afterwards
+		"""Whether to enforce left/right value to fall within min/max values, if turned on, left/right are immmediately
+		updated afterwards
 
 		Args:
 			enforce (bool): Whether to enforce min/max limits
 		"""
 
 		if enforce != self._enforce_limits: #If update neccesary
-			if self._enforce_limits == False:
+			if not self._enforce_limits:
 				self._left_val, self._right_val = self.find_bounded(self.left_val, self.right_val) #Update to fall within bounds
 		self._enforce_limits = enforce
 
@@ -149,7 +156,6 @@ class LimitedRange():
 					self._min_val = value
 				else:
 					self._min_val = min(self._max_val, value)
-				
 				if self._left_val is not None:
 					self.left_val = max(value, self._left_val)
 				if self.right_val is not None:
@@ -256,9 +262,10 @@ class LimitedRange():
 			bool: wether in bounds
 		"""
 
-		if self._max_val != None and right_val != None and (right_val > self._max_val or right_val < self.min_val):
+		if (self._max_val is not None
+				and right_val is not None and (right_val > self._max_val or right_val < self.min_val)):
 			return False
-		if self._min_val != None and left_val != None and (left_val < self._min_val or left_val > self._max_val):
+		if self._min_val is not None and left_val is not None and (left_val < self._min_val or left_val > self._max_val):
 			return False
 
 		return True
@@ -269,7 +276,8 @@ class LimitedRange():
 		Args:
 			left_val ([type], optional): The desired left value. Defaults to None.
 			right_val ([type], optional): The desired right value. Defaults to None.
-			none_to_limit (bool, optional): Whether "None" should be transled to the current min (left value) or current max (right value). Defaults to True.
+			none_to_limit (bool, optional): Whether "None" should be transled to the current min (left value) or 
+				current max (right value). Defaults to True.
 
 		This assument min and max values are valid (Either one is None or (min < max) )
 		"""
@@ -287,7 +295,7 @@ class LimitedRange():
 			if self._min_val is not None and val is not None:
 				final_values[key] = max(self._min_val, final_values[key]) #type: ignore (None check is done)
 			if self._max_val is not None and val is not None:
-				final_values[key] = min(self._max_val, final_values[key]) #type: ignore 
+				final_values[key] = min(self._max_val, final_values[key]) #type: ignore
 
 		if final_values['left'] is not None and final_values['right'] is not None:
 			if final_values['left'] > final_values['right']:
@@ -301,12 +309,13 @@ class LimitedRange():
 
 
 	def copy_limits(self, limrange : LimitedRange):
-		"""Copies the limits of another LimitedRange, if update_vals_after is true, the current left/right values will be updated
-		to fall between the new min/max values
+		"""Copies the limits of another LimitedRange, if update_vals_after is true, the current left/right values will
+		be updated to fall between the new min/max values
 
 		Args:
 			limrange (LimitedRange): The LimitedRange for which the min/max values will be copies
-			update_vals_after (bool, optional): Whether to update left/right to fall between min/max (and before/after eachother). Defaults to True.
+			update_vals_after (bool, optional): Whether to update left/right to fall between min/max (and before/after 
+				eachother). Defaults to True.
 		"""
 
 		self._min_val = limrange.min_val
@@ -338,7 +347,3 @@ class LimitedRange():
 						(self.left_val-self.min_val) / (self.max_val - self.min_val),
 						(self.right_val-self.min_val) / (self.max_val - self.min_val)
 			)
-
-
-
-

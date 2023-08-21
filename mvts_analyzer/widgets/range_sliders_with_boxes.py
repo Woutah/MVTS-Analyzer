@@ -14,12 +14,12 @@ from .range_slider import QRangeSlider
 log = logging.getLogger(__name__)
 
 
-def default_txt_converter(x):
+def default_txt_converter(val):
 	"""Default text converter - rounds to 2 decimals"""
-	if x is None:
+	if val is None:
 		return "None"
 
-	return str(round(x, 2)) #Assumes
+	return str(round(val, 2)) #Assumes
 
 
 class RangeSlidersWithBoxes(QtWidgets.QWidget):

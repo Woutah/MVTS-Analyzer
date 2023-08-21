@@ -119,5 +119,8 @@ class RangeSliderWithBox(QtWidgets.QWidget):
 		self._slider.blockSignals(False)
 
 	def set_all(self, limited_value : LimitedValue):
+		"""
+		Set min/max and value using a LimitedValue object 
+		"""
 		self._limited_value = copy.copy(limited_value)
 		self._update_all()
