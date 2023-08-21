@@ -560,6 +560,7 @@ class GraphData(QtCore.QObject):
 				axis=0, subset=merged_df.columns.difference([self._dt_col]), how="all", inplace=True
 			) #Drop columns that are completely empty
 			self._df = merged_df
+			self._df_selection = set([]) #Reset selection
 		else:
 			self._df = new_df #Copy?
 		self.dfChanged.emit() #Broadcast
