@@ -138,9 +138,9 @@ def create_qt_warningbox(text : str, box_title : str = "Message"):
 def catch_show_exception_in_popup_decorator(
 		re_raise : bool = True,
 		add_traceback_to_details : bool = True,
-		custom_error_msg : str | None = None,
+		custom_error_msg : typing.Optional[str] = None,
 		title : str = "Error",
-		target_width : float | int | None = 500
+		target_width : typing.Union[float, int, None] = 500
 	):
 	"""Decorator that catches ALL exceptions and logs them. Also shows a message box if the app is running.
 	TODO: second argument with list of exceptions to catch?

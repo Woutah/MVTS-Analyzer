@@ -101,7 +101,7 @@ def plot_pca_2d(dataset):
 
 def plot_pca_3d(
 		dataframe : pd.DataFrame,
-		plot_only_classes : typing.List[str] | None = None,
+		plot_only_classes : typing.Optional[typing.List[str]] = None,
 		dt_column = "DateTime",
 		lbl_column = None,
 		figurenr : int = 5,

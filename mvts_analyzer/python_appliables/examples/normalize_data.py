@@ -17,11 +17,12 @@ is not known.
 from mvts_analyzer.graphing.graph_data import GraphData
 from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from PySide6 import QtWidgets
+import typing
 
 def apply(
 		model : GraphData,
 		settings_model : GraphSettingsModel,
-		main_window : QtWidgets.QMainWindow | None = None
+		main_window : typing.Optional[QtWidgets.QMainWindow] = None
 	):
 	"""Example apply-function that normalizes the numeric columns in the currently loaded dataframe"""
 	# model.df = 
