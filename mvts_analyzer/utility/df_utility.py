@@ -79,13 +79,15 @@ def save_dataframe(dataframe : pd.DataFrame, save_path : str, locs=None):
 		dataframe.loc[locs].to_pickle(save_path)
 	elif file_type == "xlsx":
 		fft_cols = get_fft_columns(dataframe) #Excel doesn't handle arrays very well, so on't use them
+	
 		dataframe.loc[locs, dataframe.columns.difference(fft_cols.keys())].dropna( #type: ignore
-			how='all', axis=1).to_excel(save_path, sheet_name="Sheet1") #Drop empty columns TODO: let user pick sheet?
+			how='all', axis=1).to_excel(save_path, sheet_name="Sheet1", index_label="Index") #Drop empty columns
+			#TODO: let user pick sheet?
 
 	elif file_type == "csv":
 		fft_cols = get_fft_columns(dataframe)
 		dataframe.loc[locs, dataframe.columns.difference(list(fft_cols.keys()))].dropna( #type: ignore
-			how='all', axis=1).to_csv(save_path) #type: ignore
+			how='all', axis=1).to_csv(save_path, index_label="Index") #type: ignore
 
 	else:
 		raise NotImplementedError
@@ -104,8 +106,10 @@ def load_dataframe_using_file_extension(file_source : str):
 			new_df = pd.read_pickle(file_source)
 		elif filetype == "xlsx":
 			new_df = pd.read_excel(file_source)
+			if "Index" in new_df.columns:
+				new_df = new_df.set_index("Index")
 		elif filetype == "csv":
-			new_df = pd.read_csv(file_source)
+			new_df = pd.read_csv(file_source, index_col="Index")
 			#Note that datetime columns are not automatically parsed, so we do that here
 			for col in new_df.columns:
 				#Check if first value is a datetime

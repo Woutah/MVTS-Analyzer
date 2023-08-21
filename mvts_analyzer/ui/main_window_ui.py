@@ -126,7 +126,7 @@ class Ui_MainWindow(object):
         self.actionSave_View_As.setObjectName(u"actionSave_View_As")
         self.actionSave_View_As.setEnabled(False)
         icon13 = QIcon()
-        icon13.addFile(u":/Icons/icons/Custom Icons/save_view.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon13.addFile(u":/Icons/icons/Custom Icons/document-save-view.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.actionSave_View_As.setIcon(icon13)
         self.actionReplot = QAction(MainWindow)
         self.actionReplot.setObjectName(u"actionReplot")
