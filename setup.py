@@ -19,17 +19,14 @@ setup(
             'mvts-analyzer=mvts_analyzer.main:main',
             'mvtsa=mvts_analyzer.main:main'
 		],
-	}
-	
-    # install_requires=[ #Generated using pipreqs
-    #     'PySide6>=6.0.0', # Qt for Python, works for 6.5.1.1
-    #     'pathos>=0.3.0', #Works for 0.3.0
-    #     'setuptools>=65.0.0', #Works for 65.5.0
-	# 	'dill>=0.3.0', #Works for 0.3.6
-	# 	'multiprocess>=0.70.00', #Works for 0.70.14
-	# 	'numpydoc>=1.4.0', #Works for 1.5.0
-	# 	'pycryptodome>=3.10.0', #Works for 3.18.0
-    #     'pyside6-utils>=1.2.1, <1.3.0', #Works for 1.2.1
-    #     'PySignal>=1.1.1' #Works for 1.1.1,
-	# ]
+	},
+	install_requires=[ #Generated using pipreqs
+        'keyboard>=0.13.5'
+		'matplotlib>=3.7.2'
+		'numpy>=1.25.2'
+		'pandas>=2.0.3'
+		'PySide6>=6.5.2'
+		'scikit_learn>=1.3.0'
+		'skimage>=0.0'
+	]
 )
