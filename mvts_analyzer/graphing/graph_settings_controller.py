@@ -458,7 +458,7 @@ class GraphSettingsController():
 		log.info("Now trying to append a df from file...")
 
 		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', #type: ignore
-				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl; *.xlsx; *.csv)")
+				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl;*.xlsx;*.csv)")
 		success, msg, df = df_utility.load_dataframe_using_file_extension(fname[0])
 		if not success or df is None:
 			gui_utility.create_qt_warningbox(msg, "Error")
@@ -475,7 +475,7 @@ class GraphSettingsController():
 		Show a popup to load a dataframe from file
 		"""
 		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', #type: ignore
-				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl; *.xlsx; *.csv)")
+				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl;*.xlsx;*.csv)")
 		if len(fname[0]) == 0 or fname[0] is None:
 			#If nothing selected -> just return
 			return
