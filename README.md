@@ -9,7 +9,7 @@ MVTS-Analyzer is an open-source Python app/package for plotting, analyzing and a
 
 - [Features](#features)
 	- [Display-control](#display-control)
-	- [Datapoint Selection](#datapoint-selection)
+	- [Datapoint Selection and Annotation](#datapoint-selection-and-annotation)
 	- [Multiple Views](#multiple-views)
 	- [Python Code](#python-code)
 	- [Supported formats](#supported-formats)
@@ -33,9 +33,9 @@ What data to plot is also controlled using the side-window with the plot-setting
 <img src="./mvts_analyzer/example/images/app_settings_example.png" width="500"/>
 </p>
 
-## Datapoint Selection
+## Datapoint Selection and Annotation
 
-We can use domain, lasso- and rectangle-selection methods to select and annotate data - and select new datapoints either complementary, subtractively or additively. Selected datapoints are highlighted in the plot and can be hidden/shown and annotated.
+We can use domain, lasso- and rectangle-selection methods to select and annotate data. The user can select new datapoints either complementary, subtractively or additively. Selected datapoints are highlighted in the plot and can be hidden/shown and annotated.
 <p align="center">
 	<img src="./mvts_analyzer/example/images/app_selection_example.png"/>
 </p>
@@ -95,7 +95,7 @@ pip install mvts-analyzer
 
 # Running
 
-If the package was installed using pip, the app can be started using the ```mvts-analyzer``` command:
+If the package was installed, the app can be started using the ```mvts-analyzer``` command:
 
 ```bash
 mvts-analyzer <options>
@@ -113,11 +113,11 @@ To check if everything is working, we can pass the ``--example`` option to launc
 mvtsa --example
 ```
 
-If the package was cloned from GitHub, the app can instead be started by running the ```main.py``` file:
-
+If the package was only cloned from GitHub, the app can instead be started by running the ```main.py``` file:
 ```bash
 python main.py <options>
 ```
+(or we can first install the app using "```pip install .```" in the root directory of the repository to install it)
 
 We can use the ```--help``` option to see what options are available:
 
