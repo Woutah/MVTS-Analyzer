@@ -1,43 +1,47 @@
-#Implementation for a variable type range widget, can switch between numeric and datetime range selector 
+"""
+A variable range - can be either numeric or datetime and dynamically switches between the two based on
+the set values
+"""
 
-
-from PySide6 import QtWidgets, QtCore, QtGui
-from mvts_analyzer.utility import GuiUtility
-from .range_slider import QRangeSlider
-from pydoc import locate
-import numpy as np
-import logging
-log = logging.getLogger(__name__)
 import datetime
-
-import copy
-from mvts_analyzer.widgets import datastructures
-from mvts_analyzer.widgets.DateTimeRange import DateTimeRange
-from mvts_analyzer.widgets.range_sliders_with_boxes import RangeSlidersWithBoxes
+import logging
 from numbers import Number
+
+import numpy as np
+from PySide6 import QtCore, QtGui, QtWidgets
+
+from mvts_analyzer.widgets import datastructures
+from mvts_analyzer.widgets.datetime_range import DateTimeRange
+from mvts_analyzer.widgets.range_sliders_with_boxes import \
+    RangeSlidersWithBoxes
+
+log = logging.getLogger(__name__)
 
 # class VariableRange(QtWidgets.QWidget):
 class VariableRange(QtWidgets.QStackedWidget):
+	"""A variable range - can be either numeric or datetime and dynamically switches between the two based on
+	the set values
+	"""
 
 	rangeEdited = QtCore.Signal(object) #[datetime, datetime]
 	rangeChanged = QtCore.Signal(object) #[datetime, datetime]
 
-	def __init__(self, 
+	def __init__(self,
 			range_slider_with_boxes : RangeSlidersWithBoxes,
 			date_time_range : DateTimeRange,
 			none_msg="Please select x-axis",
-			text_parser_dict = {},
-			*args, 
+			text_parser_dict = None,
 			**kwargs):
+		if text_parser_dict is None:
+			text_parser_dict = {}
 		log.debug("Initializing variablerange")
-		super(VariableRange, self).__init__(*args, **kwargs)
-		
-		# self.layout = QtWidgets.QVBoxLayout()
-		myFont=QtGui.QFont()
-		myFont.setItalic(True)
+		super(VariableRange, self).__init__(**kwargs)
+
+		my_font=QtGui.QFont()
+		my_font.setItalic(True)
 		self.none_msg_lbl = QtWidgets.QLabel()
 		self.none_msg_lbl.setText(none_msg)
-		self.none_msg_lbl.setFont(myFont)
+		self.none_msg_lbl.setFont(my_font)
 
 		self.range_slider_with_boxes = range_slider_with_boxes
 		self.date_time_range = date_time_range
@@ -58,6 +62,7 @@ class VariableRange(QtWidgets.QStackedWidget):
 		self.show()
 
 	def set_all(self, limited_range : datastructures.LimitedRange):
+		"""Copy the data from another limited range to this one"""
 		if limited_range is None:
 			log.warning("Cannot display limited range - None is passed")
 			self.setCurrentIndex(0)
@@ -79,10 +84,3 @@ class VariableRange(QtWidgets.QStackedWidget):
 			self.setCurrentIndex(0)
 
 		log.debug("Done setting all")
-
-
-
-
-
-
-# class DateTimeRange(QtWidgets.QWidget):

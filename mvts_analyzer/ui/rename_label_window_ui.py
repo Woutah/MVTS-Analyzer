@@ -27,7 +27,7 @@ class Ui_RenameLabelWindow(object):
             RenameLabelWindow.setObjectName(u"RenameLabelWindow")
         RenameLabelWindow.resize(719, 276)
         icon = QIcon()
-        icon.addFile(u":/Icons/icons/Custom Icons/label_rename_icon.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/Icons/icons/Tango Icons/mimetypes/x-office-document-template.svg", QSize(), QIcon.Normal, QIcon.Off)
         RenameLabelWindow.setWindowIcon(icon)
         self.centralwidget = QWidget(RenameLabelWindow)
         self.centralwidget.setObjectName(u"centralwidget")

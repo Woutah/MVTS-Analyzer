@@ -1,9 +1,13 @@
-# """
-# The main window from which all other windows can be accessed TODO: break up in to model/view/controller
-# """
+"""
+Implements:
+GraphSettingsModelData - The actual data behind the displayed graph
+GraphSettingsModel - A Qt-Wrapper around GraphSettingsModelData that emits signals when data changes so the UI can be
+	updated
+"""
 
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 import typing
@@ -12,10 +16,7 @@ import matplotlib
 import matplotlib.pyplot
 from PySide6 import QtCore
 
-import datetime
-
 from mvts_analyzer.widgets.datastructures import LimitedRange, LimitedValue
-
 
 log = logging.getLogger(__name__)
 matplotlib.use('Qt5Agg')
@@ -76,7 +77,7 @@ class GraphSettingsModelData():
 		self._x_axis : str = "DateTime"
 		self._plot_type : str = "Line"
 		self._default_x_axis : str = "DateTime"
-		self._plot_font_size : int = 10 
+		self._plot_font_size : int = 10
 
 		self.label_column_presets : list[str] = []
 		self.label_column_options_presets : typing.Dict[str, typing.List[str]] = {}
@@ -92,16 +93,16 @@ class GraphSettingsModelData():
 		self._plot_color_column : str = ""
 
 		self.plot_filters= []
-		# self._selectionGapFillMs = 0 #When selecting data, how many millisecond gaps should also be selected (e.g. t=1, t=3, then if GapFillMs=1000, t=2 would also be selected)
-
-		self._selection_gap_fill_ms_limval : LimitedValue = LimitedValue( 0, 10000, 0) #Font sizes for plotting
+		#When selecting data, how many millisecond gaps should also be selected 
+		# (e.g. t=1, t=3, then if GapFillMs=1000, t=2 would also be selected)
+		self._selection_gap_fill_ms_limval : LimitedValue = LimitedValue( 0, 10000, 0) 
 
 	def reset_all_settings_to_default(self): #Reset all to default
 		self.copy_attrs(GraphSettingsModelData())
 
 	@staticmethod
 	def column_sorter(comp : tuple, default_sorting : list):
-		"""A sorter which can be passed to the sorted() method (e.g. 
+		"""A sorter which can be passed to the sorted() method (e.g.
 			sorted(alist, key=lambda x: column_sorter(x, default_sorting)))
 			Sorts first by [default_sorting]. then alphabetically.
 
@@ -133,7 +134,7 @@ class GraphSettingsModelData():
 		self.__dict__.update(data.__dict__)
 
 
-class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject): 
+class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	#Note: The order of inheritance is important here -> In pyqt5 the order is different than pyside6
 	"""
 	Qt-Wrapper around GraphSettingsModelData that emits signals when data changes
@@ -165,7 +166,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	plotTypeChanged = QtCore.Signal(str)
 
 
-	plotColorMethodChanged = QtCore.Signal(str, str) #Type ("Based On Column" / "Based On Labels") + Label column ("" if based on column)
+	plotColorMethodChanged = QtCore.Signal(str, str) #Type ("Based On Column" / "Based On Labels")
 
 	selectionGapFillMsChanged = QtCore.Signal(int)
 
@@ -276,7 +277,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	@fft_brightness.setter
 	def fft_brightness(self, new_brightness : float):
 		if self.fft_brightness_limval.val is not new_brightness:
-			self.fft_brightness_limval.val = new_brightness #TODO: what if min/max limits make it remain te same --> update not neccesasry
+			self.fft_brightness_limval.val = new_brightness
 			self.fftBrightnessChanged.emit(self.fft_brightness_limval)
 			self.changed.emit(self)
 
@@ -289,8 +290,8 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	def fft_quality(self, new_quality : float):
 		if self.fft_quality_limval.val is not new_quality:
 			log.debug(f"Quality is now {new_quality}")
-			self.fft_quality_limval.val = new_quality #TODO: what if min/max limits make it remain te same --> update not neccesasry
-			self.fftQualityChanged.emit(self.fft_quality_limval._val)
+			self.fft_quality_limval.val = new_quality
+			self.fftQualityChanged.emit(self.fft_quality_limval.val)
 			self.changed.emit(self)
 
 	@property
@@ -301,7 +302,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	@font_size.setter
 	def font_size(self, new_fontsize : float):
 		if self._font_size_limval.val is not new_fontsize:
-			self._font_size_limval.val = new_fontsize #TODO: what if min/max limits make it remain te same --> update not neccesasry
+			self._font_size_limval.val = new_fontsize
 			self.fontSizeChanged.emit(self._font_size_limval)
 			self.changed.emit(self)
 
@@ -371,10 +372,8 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 
 	@plot_domain_left.setter
 	def plot_domain_left(self, new_left):
-		# utility.safe_parse_new(new_left, datetime.datetime, dateutil.parser.parse) #Parse from string --> datetime.datetime
 		if self.plot_domain_limrange.left_val != new_left:
-			self.plot_domain_limrange.left_val = new_left #TODO: emit of limrange class is coupled --> is this the nicest way of doing this?
-			# self.plotDomainChanged.emit([self.plot_domain_limrange.left_val, self.plot_domain_limrange.right_val])
+			self.plot_domain_limrange.left_val = new_left
 			self.plotDomainLimrangeChanged.emit(self._plot_domain_limrange)
 
 	@property
@@ -384,8 +383,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	@plot_domain_right.setter
 	def plot_domain_right(self, new_right):
 		if self.plot_domain_limrange.right_val != new_right:
-			self.plot_domain_limrange.right_val = new_right #TODO: emit of limrange class is coupled --> is this the nicest way of doing this?
-			# self.plotDomainChanged.emit([self.plot_domain_limrange.left_val, self.plot_domain_limrange.right_val])
+			self.plot_domain_limrange.right_val = new_right
 			self.plotDomainLimrangeChanged.emit(self._plot_domain_limrange)
 
 
@@ -427,9 +425,9 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	@x_axis.setter
 	def x_axis(self, new_axis_name):
 		if new_axis_name != self.x_axis: #if changed
-				self._x_axis = new_axis_name
-				self.xAxisChanged.emit(self.x_axis)
-				self.changed.emit(self)
+			self._x_axis = new_axis_name
+			self.xAxisChanged.emit(self.x_axis)
+			self.changed.emit(self)
 
 
 	@property
@@ -451,9 +449,9 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 	@selection_gap_fill_ms.setter
 	def selection_gap_fill_ms(self, new_gap_fill_ms : int):
 		if new_gap_fill_ms != self._selection_gap_fill_ms_limval.val: #if changed
-				self._selection_gap_fill_ms_limval.val = new_gap_fill_ms
-				self.selectionGapFillMsChanged.emit(self._selection_gap_fill_ms_limval.val)
-				self.changed.emit(self)
+			self._selection_gap_fill_ms_limval.val = new_gap_fill_ms
+			self.selectionGapFillMsChanged.emit(self._selection_gap_fill_ms_limval.val)
+			self.changed.emit(self)
 
 	# ========================================= Other functions ============================================
 	# def update_settings_using_df(self):
@@ -468,19 +466,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 
 	def save_as_json(self, path):
 		# json.dumps(self.__dict__)
-		with open(path, "w") as file:
-			json.dump(self,file, default=lambda x: self.json_default(x), indent=4)
+		with open(path, "w", encoding="utf-8") as file:
+			json.dump(self,file, default=self.json_default, indent=4)
 
 		log.info(f"Saved plot options to {path}")
-		# exit(0)
-
-	def load_from_json(self, path):
-		raise(NotImplementedError)
-
-
-	#============ For pickling etc. =================
-	# def __setstate__(self, state):
-	# 	# Restore attributes
-	# 	self.__dict__.update(state)
-	# 	# Call the superclass __init__()
-	# 	super(self).__init__() 

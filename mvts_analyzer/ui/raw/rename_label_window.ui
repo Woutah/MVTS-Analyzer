@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="../../res/app_resources.qrc">
-    <normaloff>:/Icons/icons/Custom Icons/label_rename_icon.svg</normaloff>:/Icons/icons/Custom Icons/label_rename_icon.svg</iconset>
+    <normaloff>:/Icons/icons/Tango Icons/mimetypes/x-office-document-template.svg</normaloff>:/Icons/icons/Tango Icons/mimetypes/x-office-document-template.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,1,0">

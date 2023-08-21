@@ -43,7 +43,6 @@ log = logging.getLogger(__name__)
 
 class PlotError(Exception):
 	"""Exception raised when plotting fails"""
-	pass
 
 class DragDetector():
 	"""
@@ -119,7 +118,7 @@ class MplCanvas(FigureCanvasQTAgg):
 	def __init__(self): #, parent=None, width=5, height=4, dpi=100):
 		# super(MplCanvas, self).__init__()
 		fig, ax = plt.subplots(1)
-		super(MplCanvas, self).__init__(fig)
+		super().__init__(fig)
 		self.figure = fig
 		self.ax_sizes = { "main" : 10}
 		self.ax_order = ["main"]
@@ -269,7 +268,7 @@ class MplCanvas(FigureCanvasQTAgg):
 
 	def remove_axes(self, except_main = True):
 		"""Remove all axes from the plot, except main (if specified)"""
-		for name, ax in self.ax_dict.copy().items():
+		for name in self.ax_dict.copy():
 			if name == "main" and except_main: #Skip main deletion if so desired
 				continue
 			self.remove_axis(name)
@@ -317,6 +316,19 @@ class QPlotter(QtWidgets.QWidget):
 
 		self._colorbar_legend = None
 		# self.selector.pandasSelectionEdited.connect(lambda x: self.set_cur_loc_selection(x, redraw_after=True))
+
+
+		#============== Other ==================
+		self.legend_names = []
+		self.legend_colors_dict = {}
+		self.data_locs = []
+		self.data_axes = []
+		self.collections = [] #in the case of scatterplots
+		self.cur_plot_type = self.settings_model.plot_type
+		self.data_colors = []
+		self._drag_detectors = []
+		self.rectangle = None
+
 
 	def handle_selection_change(self, new_selection : set):
 		"""Handle selection change, detect which key is being pressed and update the selection accordingly"""
@@ -385,7 +397,7 @@ class QPlotter(QtWidgets.QWidget):
 
 
 		fft_cmap = fft_cmap(np.arange(fft_cmap.N)) #type: ignore
-		fft_cmap[:, -1] = self.settings_model.fft_transparency #type: ignore 
+		fft_cmap[:, -1] = self.settings_model.fft_transparency #type: ignore
 		fft_cmap = matplotlib.colors.ListedColormap(fft_cmap) #type: ignore
 
 		X, Y, Z = self.fft_data
@@ -419,7 +431,7 @@ class QPlotter(QtWidgets.QWidget):
 
 		# cur_ax.spines['left'].set_visible(True)
 
-		if self.settings_model.fft_column == "":
+		if self.settings_model.fft_column == "" or self.settings_model.fft_column is None:
 			log.info("Selected FFT column is empty, not plotting")
 			return
 
@@ -542,73 +554,74 @@ class QPlotter(QtWidgets.QWidget):
 			# 	NOTE: pd.Int64Dtype() created errors, even when first converting to numpy, this makes sure everything
 			# 	works before plotting
 
-			X, Y, Z = [], [], []
+			x_bars, z_bars = [], []
 
 			log.debug(f"Unique values in label column {label_col} : {dt_lbl[label_col].unique()}")
 
 
-			X = dt_lbl["DateTime"].to_numpy()
-			Z = dt_lbl[label_col].astype("int64").to_numpy() #Added 20221021 -> every class (including None =0 )should
+			x_bars = dt_lbl["DateTime"].to_numpy()
+			z_bars = dt_lbl[label_col].astype("int64").to_numpy() #Added 20221021 -> every class (including None =0 )should
 				#be an integer now -> make sure interpreted as such
 			log.debug(f"Calculating least squares pcolormesh for {label_col} took : {time.perf_counter() - before1}")
 
 			before1 = time.perf_counter()
 
-			pc = ax.pcolormesh(X, [0,1], [np.array(Z)[:-1]], cmap=color_map, vmin=0, vmax=len(all_classes)) # cmap=cMap) #TODO: make sure this is right
-			# pc = ax.pcolormesh(X, [0, 1], [np.array(Z), np.array(Z)], cmap=color_map, vmin=0, vmax=len(all_classes))# 2022-07-13: changed to stacked Np.Array(Z) due to problems on some other PC's (otherwise (X,Y).shape != Z.shape )  2022-01-05: changed back to above bc python3.10 did not work otherwise
-			log.debug(f"Creating pcolormesh of size {len(X)} took: {time.perf_counter() - before1}s")
+			ax.pcolormesh(x_bars, [0,1], [np.array(z_bars)[:-1]], cmap=color_map, vmin=0, vmax=len(all_classes))
+			log.debug(f"Creating pcolormesh of size {len(x_bars)} took: {time.perf_counter() - before1}s")
 			ax.set(yticklabels=[])
 			ax.set_ylabel(label_col, rotation=0, fontsize=self.settings_model.font_size, ha='right', va='center')
 
 
 			# ======== Annotation on hover ===============
-			annot = ax.annotate("", xy=(0,0), xytext=(0,0 ),textcoords="offset points", ha='center', va='center',
+			ax.annotate("", xy=(0,0), xytext=(0,0 ),textcoords="offset points", ha='center', va='center',
 						bbox=dict(boxstyle="round", fc="w"))
 
 
 
 						#arrowprops=dict(arrowstyle="->"))
 			#Show dt_lbl string when hovering over pcolumesh:
-			def update_annot(x, y, newtext, annot):
-				annot.set_visible(True)
-				annot.xy = (x,y)
-				annot.set_text(newtext)
-				annot.get_bbox_patch().set_alpha(1)
-				self.canvas.draw_idle()
+			# def update_annot(x, y, newtext, annot):
+			# 	annot.set_visible(True)
+			# 	annot.xy = (x,y)
+			# 	annot.set_text(newtext)
+			# 	annot.get_bbox_patch().set_alpha(1)
+			# 	self.canvas.draw_idle()
 
-			def on_axis_leave(event, annot):
-				#check if annotation is visible (otherwise lag when moving away from plot)
-				if annot.get_visible():
-					annot.set_visible(False)
-					self.canvas.draw_idle()
+			# def on_axis_leave(event, annot):
+			# 	#check if annotation is visible (otherwise lag when moving away from plot)
+			# 	if annot.get_visible():
+			# 		annot.set_visible(False)
+			# 		self.canvas.draw_idle()
+			# def on_axis_hover(event, ax, original_labels, original_dts, annot):
+			# 	#NOTE: merged this function with format_coord -> might not be necceasary anymore
+			# 	if event.inaxes == ax:
+			# 		x, y = event.xdata, 0.5
+			# 		dt = matplotlib.dates.num2date(x).replace(tzinfo=None)
+			# 		label = original_labels[original_dts.sub(dt).abs().idxmin()]
+			# 		update_annot(x, y, label, annot)
 
-			def format_coord(x, y, original_labels, original_dts):
-				dt = matplotlib.dates.num2date(x).replace(tzinfo=None)
+			def format_coord(x_coord, y_coord, original_labels, original_dts): #pylint: disable=unused-argument
+				dt = matplotlib.dates.num2date(x_coord).replace(tzinfo=None)
 				label = original_labels[original_dts.sub(dt).abs().idxmin()]
-
-				# update_annot(x, y, label) #TODO: this takes some time so updating label text takes some ms -> make this faster?
 				return f"x={dt} 		class={label}"
 
-				# return f"x={dt} 		class={ dt_lbl_original[label_col][dt_lbl_original['DateTime'].sub(dt).abs().idxmin()]}"
 
-			def on_axis_hover(event, ax, original_labels, original_dts, annot): #NOTE: merged this function with format_coord -> might not be necceasary anymore
-				if event.inaxes == ax:
-					x, y = event.xdata, 0.5
-					dt = matplotlib.dates.num2date(x).replace(tzinfo=None)
-					label = original_labels[original_dts.sub(dt).abs().idxmin()]
-					update_annot(x, y, label, annot)
-				# else:
-				# 	on_axis_leave(event, annot)
 
 			#NOTE: turn on to get labeling... But takes some time when moving over plot
-			# self.canvas.mpl_connect("motion_notify_event", lambda x, ax=ax, original_labels=dt_lbl_original[label_col], original_dts=dt_lbl_original['DateTime'], annot=annot: on_axis_hover(x, ax, original_labels, original_dts, annot))
+			# self.canvas.mpl_connect("motion_notify_event",
+			# 		lambda x,
+			# 		ax=ax,
+			# 		original_labels=dt_lbl_original[label_col],
+			# 		original_dts=dt_lbl_original['DateTime'],
+			# 		annot=annot: on_axis_hover(x, ax, original_labels, original_dts, annot)
+			# )
 			# self.canvas.mpl_connect("axes_leave_event", lambda x, annot=annot: on_axis_leave(x, annot))
-			ax.format_coord = lambda x,y, original_labels=dt_lbl_original[label_col], original_dts=dt_lbl_original['DateTime']: format_coord(x,y, original_labels=original_labels, original_dts=original_dts )
+			ax.format_coord = (lambda x,y, original_labels=dt_lbl_original[label_col], original_dts=dt_lbl_original['DateTime']: #pylint: disable=cell-var-from-loop
+				format_coord(x,y, original_labels=original_labels, original_dts=original_dts )) #pylint: disable=cell-var-from-loop
 
 			# annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
 			#         bbox=dict(boxstyle="round", fc="w"),
 			#         arrowprops=dict(arrowstyle="->"))
-			# ax.
 
 
 
@@ -625,45 +638,50 @@ class QPlotter(QtWidgets.QWidget):
 		legend_names = np.array(legend_names)[sort_index]
 		legend_colors = legend_colors[sort_index]
 
-		# ax.legend(legend_colors, legend_names, loc='upper center', bbox_to_anchor=(0.5, 1.39), ncol = len(all_classes))
-		self._colorbar_legend = axes[-1].legend(legend_colors, legend_names, loc='upper center', bbox_to_anchor=(0.5, -1.5), ncol = min(10, len(legend_names)), frameon = False)
+		self._colorbar_legend = axes[-1].legend(legend_colors,
+			legend_names,
+			loc='upper center',
+			bbox_to_anchor=(0.5, -1.5),
+			ncol = min(10, len(legend_names)),
+			frameon = False
+		)
 
 
 
 
 
 
-	def _recolor_selection_scatter(self, ax, ind_selection, collection, base_colors):
+	def _recolor_selection_scatter(self, ax, ind_selection, collection, base_colors): #pylint: disable=unused-argument
 		"""Recolor the selection in a scatterplot
 		"""
-		fc = base_colors.copy()
-		
-		if len(ind_selection) == 0: #Color normally if no selection
-			fc[ind_selection] = base_colors[ind_selection]
-		else:
-			fc[:, :3] = 0.75 * (1.0 - fc[:, :3]) + fc[:, :3] #Lighten everything except selected points
-			fc[ind_selection] = base_colors[ind_selection]
+		face_color = base_colors.copy()
 
-		collection.set_facecolors(fc)
-		collection.set_edgecolors(fc)
+		if len(ind_selection) == 0: #Color normally if no selection
+			face_color[ind_selection] = base_colors[ind_selection]
+		else:
+			face_color[:, :3] = 0.75 * (1.0 - face_color[:, :3]) + face_color[:, :3] #Lighten everything except selected points
+			face_color[ind_selection] = base_colors[ind_selection]
+
+		collection.set_facecolors(face_color)
+		collection.set_edgecolors(face_color)
 		self.canvas.draw_idle()
 
-	def _recolor_selection_lineplot(self, ind_selection, collection, base_colors, length):
+	def _recolor_selection_lineplot(self, ind_selection, collection, base_colors):
 		# unpacked =
 		# raise NotImplementedError("Recolor lineplot not implemented")
-		fc = base_colors.copy()
+		face_colors = base_colors.copy()
 		# slice = [i for i in range(length) if i not in ind_selection]
 		nextselection = [i - 1 for i in ind_selection if i !=0] #Always take the line after the selected item
 
 		if len(nextselection) == 0:
-			fc[nextselection] = base_colors[nextselection]
+			face_colors[nextselection] = base_colors[nextselection]
 		else:
-			fc[:, :3] = 0.75 * (1.0 - fc[:, :3]) + fc[:, :3] #Lighten everything except selected points
+			face_colors[:, :3] = 0.75 * (1.0 - face_colors[:, :3]) + face_colors[:, :3] #Lighten everything except selected points
 			# fc[ind_selection] = base_colors[ind_selection]
-			fc[nextselection] = base_colors[nextselection]
+			face_colors[nextselection] = base_colors[nextselection]
 
-		collection.set_facecolors(fc)
-		collection.set_edgecolors(fc)
+		collection.set_facecolors(face_colors)
+		collection.set_edgecolors(face_colors)
 		self.canvas.draw_idle()
 
 
@@ -672,34 +690,21 @@ class QPlotter(QtWidgets.QWidget):
 
 	def _set_selection(self, loc_selection):
 		self.cur_pd_selection = set(loc_selection)
-		for ax_idx, (ax, loc, colors, length) in enumerate(zip(self.data_axes, self.data_locs, self.data_colors, self.data_lengths)):
+		for ax_idx, (ax, loc, colors) in enumerate(zip(self.data_axes, self.data_locs, self.data_colors)):
 			plot_ind = []
 
-			for i in range(len(loc)):
+			for i in range(len(loc)): #pylint: disable=consider-using-enumerate
 				if loc[i] in self.cur_pd_selection:
 					plot_ind.append(i) #Append all indexes of values that have been selected
 
 			if self.cur_plot_type == "Scatter":
 				self._recolor_selection_scatter(ax, plot_ind, self.collections[ax_idx], colors)
 			else:
-				self._recolor_selection_lineplot(plot_ind, self.collections[ax_idx], colors, length)
+				self._recolor_selection_lineplot(plot_ind, self.collections[ax_idx], colors)
 
-
-
-	def _remake_legend(self, names):
-		log.debug("Could not create legend, not implemented")
 
 	def _replot_selected_data(self):
 		log.debug("Now replotting selected data")
-
-
-
-		# self.canvas.clear_all_axes() #TODO: maybe take a historic-df that looks what columns have changed? Only clear those?
-		# self.prepare_axes()
-
-
-
-
 		main_ax = self.canvas.get_axis("main")
 		main_ax.set_ylim(0, 1) #Normalize
 
@@ -719,7 +724,7 @@ class QPlotter(QtWidgets.QWidget):
 						continue #Don't add nan
 					self.legend_names.add(name)
 				self.legend_names = list(self.legend_names)
-			except Exception as ex:
+			except Exception as ex: #pylint: disable=broad-exception-caught
 				log.warning(f"Cannot create color legend for this plot: {ex}")
 
 		log.debug(f"Legend names {self.legend_names}")
@@ -731,7 +736,7 @@ class QPlotter(QtWidgets.QWidget):
 			#get new color for each class
 			col_colors = matplotlib.cm.rainbow(np.linspace(0,1,len(self.legend_names))) #pylint: disable=no-member #type: ignore
 
-		assert(len(col_colors) >= len(self.legend_names)) #This has gone wrong before.... Make sure there are enough colors otherwise the dictionary will fail in a later stage
+		assert len(col_colors) >= len(self.legend_names) #This has gone wrong before.... Make sure there are enough colors otherwise the dictionary will fail in a later stage
 
 		color_dict = {name : np.array(color) for name, color in zip(self.legend_names, col_colors)}
 		color_dict[None] = np.array([.8, .8, 0.8, 1]) #type: ignore
@@ -750,8 +755,6 @@ class QPlotter(QtWidgets.QWidget):
 		self.data_locs = []
 		self.data_axes = []
 		self.collections = [] #in the case of scatterplots
-		self.line2dlist = [] #In the case of lineplots
-		self.data_lengths = []
 		self.cur_plot_type = self.settings_model.plot_type
 
 
@@ -762,7 +765,7 @@ class QPlotter(QtWidgets.QWidget):
 
 		assert(self.selected_data is not None), "Selected data is None, cannot replot. This should have been caught earlier."
 		# exit(0)
-		for col_idx, (col, col_color) in enumerate(zip(list(self.settings_model.plot_list), col_colors)): #go over columns (and give each one a color)
+		for col, col_color in zip(list(self.settings_model.plot_list), col_colors): #go over columns (and color them)
 
 			if col is None or col == "": #skip empty colnames
 				continue
@@ -771,7 +774,7 @@ class QPlotter(QtWidgets.QWidget):
 
 			cur_locs = self.selected_data.index.to_numpy()[nan_mask]
 			self.data_locs.append(cur_locs) #To translate in-graph selection back to pandas selection
-			x_vals = self.selected_data[self.settings_model.x_axis].to_numpy()[nan_mask] #Remove nan entries #TODO: what if date is none?
+			x_vals = self.selected_data[self.settings_model.x_axis].to_numpy()[nan_mask] #Remove nan entries
 			y_vals = self.selected_data[col].to_numpy()[nan_mask]
 
 			if len(x_vals) == 0 or len(y_vals) == 0: #Skip if no data
@@ -788,13 +791,11 @@ class QPlotter(QtWidgets.QWidget):
 
 
 			XYs.append( np.vstack((x_vals, y_vals)).T)
-
-			self.data_lengths.append(len(x_vals))
 			self.data_axes.append(cur_ax)
 			cur_ax.yaxis.label.set_color(col_color) #type: ignore #(r, g, b, a)
 			cur_ax.spines['right'].set_color(col_color) #type: ignore
 
-			diff =  abs((max(y_vals) - min(y_vals))* 0.05)
+			diff =  abs((max(y_vals) - min(y_vals))* 0.05) #type: ignore
 			minmax = ( min(y_vals) - diff, max(y_vals) + diff) #Take some leeway in the plot to better see edges
 			cur_ax.set_ylim(minmax) #type: ignore
 			minmaxes.append(minmax)
@@ -831,22 +832,16 @@ class QPlotter(QtWidgets.QWidget):
 				self.rectangle.get_bbox().get_points()[1][0], #x1y1-> pick x1
 				self.rectangle.get_bbox().get_points()[0][1] #x0y0 -> pick y0 -> results in top right
 			)
-			# cur_ax.add_patch(self.rectangle) #Are these deleted?
 			cur_ax.add_artist(self.rectangle)
 
 
 			self._drag_detectors.append(
 				DragDetector(canvas = self.canvas, ax=cur_ax, rect = self.rectangle, toolbar=self.toolbar)
 			)
-			# self.canvas.mpl_connect('button_press_event', self.toolbar.
-
-			#link click and drag to drag_zoom of toolbar
-
-
-
 
 			if color_based_on_col: #If all datapoints same color
-				self.data_colors.append(np.tile(np.array([col_color[0], col_color[1], col_color[2], 1.0]), (len(x_vals), 1)), )
+				self.data_colors.append(np.tile(
+					np.array([col_color[0], col_color[1], col_color[2], 1.0]), (len(x_vals), 1)), )
 			else: #If color based on class
 				color_col = "ERR"
 				try:
@@ -862,7 +857,7 @@ class QPlotter(QtWidgets.QWidget):
 
 				except KeyError as err:
 					raise KeyError(f"KeyError: Selected color-column ({color_col}) resulted in error: {err}, please "
-		    			f"make sure an existing column is selected under Plot Colors")
+		    			f"make sure an existing column is selected under Plot Colors") from err
 			# idx_sorted = np.argsort(self.legend_names)
 			log.debug(f"Plotting column: {col}")
 
@@ -875,7 +870,8 @@ class QPlotter(QtWidgets.QWidget):
 				dts = self.selected_data["DateTime"].to_numpy()[nan_mask] #TODO: "DateTime is hardcoded here"
 				dt_distances = (dts[:-1] - dts[1:]) / np.timedelta64(1, 's')
 				dt_distances_mask = dt_distances > 100 #If more than 100 seconds
-				self.data_colors[-1][:-1][dt_distances_mask] = self.data_colors[-1][:-1][dt_distances_mask] * [1, 1, 1, 0.1]#Select data colors => skip last value => all where threshold is true => set alpha (-1) to 0.1
+				#Select data colors => skip last value => all where threshold is true => set alpha (-1) to 0.1
+				self.data_colors[-1][:-1][dt_distances_mask] = self.data_colors[-1][:-1][dt_distances_mask] * [1, 1, 1, 0.1]
 
 				#===============0.298 lineplot ====================
 				line_starts = np.expand_dims(np.vstack((x_vals[:-1], y_vals[:-1])), axis=1)
@@ -914,8 +910,6 @@ class QPlotter(QtWidgets.QWidget):
 			color = self.legend_colors_dict[name]
 			legend_indicator_list.append(matplotlib.lines.Line2D([0], [0], color=color, lw=4)) #type: ignore (rgba)
 		legend_indicators = np.array(legend_indicator_list)
-
-		# legend_indicators = np.array([ matplotlib.lines.Line2D([0], [0], color=self.legend_colors_dict[name], lw=4) for name in self.legend_names ]) #line figures in legend
 		legend_names = np.array([str(i) for i in self.legend_names])
 		idx_sorted = range(len(self.legend_names))
 
@@ -930,7 +924,7 @@ class QPlotter(QtWidgets.QWidget):
 		self.canvas.ax_dict["main"].set_ylim(0, 1)
 
 		if len(legend_names) > 0:
-			main_legend = self.canvas.ax_dict["main"].legend(
+			self.canvas.ax_dict["main"].legend(
 				legend_indicators[idx_sorted], legend_names[idx_sorted],
 				loc='upper center',
 				bbox_to_anchor=(0.5, 1.007),
@@ -938,10 +932,7 @@ class QPlotter(QtWidgets.QWidget):
 				frameon=False
 			)
 
-
-
-
-		for i, name in enumerate(self.canvas.ax_order[:-1]):
+		for name in self.canvas.ax_order[:-1]:
 			self.canvas.ax_dict[name].set_xlabel("") #Remove xlabels
 			self.canvas.ax_dict[name].tick_params(labelbottom=False)#Remove ticks
 
@@ -972,7 +963,7 @@ class QPlotter(QtWidgets.QWidget):
 		x_axis = self.settings_model.x_axis
 		plot_xlim = self.settings_model.plot_domain_limrange
 		self.plot_title = ""
-		self.selected_data = self.data_model._df #Create dataframe view of data that is to be plotted
+		self.selected_data = self.data_model.df #Create dataframe view of data that is to be plotted
 
 		for filt in self.settings_model.plot_filters:
 			try:
@@ -983,8 +974,9 @@ class QPlotter(QtWidgets.QWidget):
 				log.error(msg)
 				create_qt_warningbox(msg)
 
-		assert(self.selected_data is not None)
-		self.selected_data = self.selected_data.loc[ self.selected_data.index.difference(list(self.data_model.hidden_datapoints))]
+		assert self.selected_data is not None
+		self.selected_data = self.selected_data.loc[
+			self.selected_data.index.difference(list(self.data_model.hidden_datapoints))]
 
 
 		if plot_xlim is not None and x_axis is not None:
@@ -1029,13 +1021,13 @@ class QPlotter(QtWidgets.QWidget):
 	@catch_show_exception_in_popup_decorator(custom_error_msg="<b>Plotting Failed</b>", re_raise=False)
 	def _replot(self):
 		self._colorbar_legend = None
-		if self.data_model._df is None:
+		if self.data_model.df is None:
 			log.error("Replot failed: no dataframe loaded")
 			raise PlotError("No dataframe loaded")
 		if self.settings_model.x_axis is None:
 			log.error("Replot failed: No x-axis selected")
 			raise PlotError("No x-axis selected")
-	
+
 		if self.settings_model.plot_list is None or len(self.settings_model.plot_list) == 0:
 			if self.settings_model.plotted_labels_list is None or len(self.settings_model.plotted_labels_list) == 0:
 				log.error("Replot failed: No columns selected")
@@ -1071,11 +1063,3 @@ class QPlotter(QtWidgets.QWidget):
 		# self.canvas.ax_dict["main"].patch.set_visible(False)
 		self.canvas.draw() #Redraw everything
 		log.debug(f"Drawingdata took: {time.perf_counter() - before}")
-
-
-
-
-
-
-
-

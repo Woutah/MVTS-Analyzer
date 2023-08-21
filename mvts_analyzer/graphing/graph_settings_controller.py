@@ -168,7 +168,12 @@ class GraphSettingsController():
 	#===================== Labeler Window --> Model ==================
 	#=================================================================
 	def process_labeler_label_btn_pressed(self, column, label):
-		"""Sets the label of current selection to the currently selected label"""
+		"""Sets the label of current selection to the currently selected label
+
+		Args:
+			column (any(?)): The column to set the label of
+			label (str): The label to set
+		"""
 		log.debug(f"Trying to set column {column} to label {label}")
 
 		if column is not None and len(column) > 0:
@@ -180,13 +185,20 @@ class GraphSettingsController():
 						): #Be sure to rename all types of nan to actual nonevalue #TODO: is this the best solution
 				label = None #TODO: maybe do this in process_labeler_columnOptionChanged instead?
 
-			if(self.data_model.set_selection_lbls(column, label)):
-				log.info(f"Succesfully set column: {column} to label: {label} of current selection (consisting of {len(self.data_model._df_selection)} entries)")
-				self.process_labeler_column_option_changed(self.labeler_window_view.col_dropdown.currentText()) #Refresh current selection
+			if self.data_model.set_selection_lbls(column, label):
+				log.info(f"Succesfully set column: {column} to label: {label} of current selection "
+	     			f"(consisting of {len(self.data_model._df_selection)} entries)")
+				self.process_labeler_column_option_changed(
+					self.labeler_window_view.col_dropdown.currentText()) #Refresh current selection
 				return
 		log.info(f"Could not set column: {column} to label: {label} of current selection (make sure points are selected)")
 
 	def process_labeler_column_option_changed(self, new_column):
+		"""Sets the appropriate options (all available labels) when the target-column for the labeler is changed
+
+		Args:
+			new_column (str): The new target-column for the labels to be set
+		"""
 		log.debug(f"Setting labeler column to {new_column}")
 		options = []
 		if new_column is not None and self.data_model.df is not None:
@@ -273,36 +285,57 @@ class GraphSettingsController():
 		"""
 		self.model.labeler_toggle = new_val
 
-	def process_view_fontSize(self, new_val : bool):
+	def process_view_fontSize(self, new_val : int):
+		"""
+		View --> Model
+		Font size changed
+		Args:
+			new_val (int): The new font size
+		"""
 		self.model.font_size = new_val
 
 	def process_view_normalizationToggle(self, new_val : bool):
+		"""
+		View --> Model
+		Called when normalization-toggle-btn changed state
+		Args:
+			new_val (bool): The new checked state of the normalization toggle button
+		"""
 		self.model.normalization_toggle = new_val
 
 	def process_view_plotDomain(self, new_val):
-
-		# log.debug(f"Model received : {new_val}")
+		"""
+		View --> Model
+		Called when plotdomain is edited in the view
+		Args:
+			new_val (typing.Tuple[datetime.datetime, datetime.datetime]): The new plotdomain
+		"""
 		left, right = new_val #unpack left and right datetime
 		self.model.plot_domain_limrange.left_val = left
 		self.model.plot_domain_limrange.right_val = right
-		# log.debug(f"Plotdomain model changed to : {self.model.plot_domain_limrange}")
 
 
 	def process_view_plotList(self, plotlist):
+		"""
+		View --> Model
+		Called when plotlist is edited in the view
+		Args:
+			plotlist (typing.List[str]): The new list of columns to plot
+		"""
 		self.model.plot_list = plotlist
 
 	def process_view_plottedLabels(self, plotlist):
+		"""
+		View --> Model
+		Called when plotted label/annotation-columns are edited in the view
+		Args:
+			plotlist (typing.List[str]): The new list of label-columns to plot
+		"""
 		self.model.plotted_labels_list = plotlist
 
-	# def process_view_viewDomainSlider(self, new_val):
-	# 	# self.model.plot_domain_left =
-	# 	print(new_val)
-
-	# def process_view_viewDomainBoxes(self, new_val):
-	# 	print(new_val)
-
 	def process_view_xAxisChanged(self, new_xaxis : str):
-		"""Set the new x-axis by name (pass column name) - if column is not found, x-axis is set to empty string, updates domains afterwards
+		"""Set the new x-axis by name (pass column name) - if column is not found, x-axis is set to empty string,
+		updates domains afterwards
 
 		Args:
 			new_xaxis (str): Name of the new column to be used as x-axis
@@ -323,28 +356,43 @@ class GraphSettingsController():
 
 
 	def process_view_plotTypeChanged(self, new_val : str):
+		"""
+		View --> Model
+		Called when plottype is edited in the view
+		Args:
+			new_val (str): The new plottype
+		"""
 		self.model.plot_type = new_val
 
 
 	def process_view_plotColorMethod(self, new_index : int):
+		"""
+		View --> Model
+		Called when plot color method is edited in the view
+		Args:
+			new_index (int): The new index of the plot color method
+		"""
 		self.model.plot_color_method = self.model.plot_color_method_options[new_index]
 
 	def process_view_plotColorColumn(self):
+		"""
+		View --> Model
+		Called when plot color column is edited in the view
+		"""
 		cb = self.view.plot_settings.inner_settings.plot_colors_column_ComboBox
 		self.model.plot_color_column = cb.currentText()
 
 	def process_view_selectionGapFillMs(self, new_selection_gap_fill_ms : int):
-		# self.view.plot_settings.inner_settings.
+		"""
+		View --> Model
+		Called when selection gap fill ms is edited in the view
+		Args:
+			new_selection_gap_fill_ms (int): The new selection gap fill ms
+		"""
 		self.model.selection_gap_fill_ms = new_selection_gap_fill_ms
 
 
 	#======================  Outer settings --> model/plotter ===========================
-
-	def save_plot_as(self, path):
-		log.debug(f"Saving figure to {path}")
-
-
-
 
 	@GuiUtility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Could not copy plot</b>")
 	def copy_plot_to_clipboard(self):
@@ -357,11 +405,11 @@ class GraphSettingsController():
 	def append_df_popup(self, df : pd.DataFrame, dt_column_df = "DateTime"):
 		"""
 		Create popup to append dataframe from file
-		
+
 		Args:
 			df (pd.DataFrame): The dataframe to append
 			dt_column_df (str, optional): The name of the datetime column in the dataframe. Defaults to "DateTime".
-		
+
 		"""
 		log.info("Now validating and trying to append df ")
 
@@ -470,7 +518,8 @@ class GraphSettingsController():
 		fname, _ = QtWidgets.QFileDialog.getSaveFileName(None, 'Save selection', #type: ignore
 			self.data_model.file_source.rsplit("\\", 1)[0] + \
 				"\\"+ self.data_model.file_source.rsplit("\\")[-1].rsplit(".", 1)[0] + \
-				f" - Subselection ({percentage}%).pkl", "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx);; Comma-Separated-Values (*.csv)")
+				f" - Subselection ({percentage}%).pkl", "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx);; "
+				"Comma-Separated-Values (*.csv)")
 		self._save_df_base(fname=fname, save_function=self.data_model.save_df_selection)
 
 	def save_df_not_hidden_only_popup(self):
@@ -485,14 +534,19 @@ class GraphSettingsController():
 		if dflen != 0:
 			percentage = int((dflen - len(self.data_model.hidden_datapoints)) / dflen * 100)
 		fname, _ = QtWidgets.QFileDialog.getSaveFileName(None, 'Save Not-Hidden Datapoints Only', #type: ignore
-			self.data_model.file_source.rsplit("\\", 1)[0] + "\\"+ self.data_model.file_source.rsplit("\\")[-1].rsplit(".", 1)[0] + f" - Subselection ({percentage}%).pkl", "Pickled dataframe (*.pkl) ;; Excel sheet (*.xlsx);; Comma-Separated-Values (*.csv)")
+			self.data_model.file_source.rsplit("\\", 1)[0] + "\\"
+				+ self.data_model.file_source.rsplit("\\")[-1].rsplit(".", 1)[0]
+				+ f" - Subselection ({percentage}%).pkl", "Pickled dataframe (*.pkl) ;; "
+				+ "Excel sheet (*.xlsx);; Comma-Separated-Values (*.csv)")
 		self._save_df_base(fname=fname, save_function=self.data_model.save_df_not_hidden_only)
 
 	def plotter_replot(self):
+		"""Calls replot on the plotter"""
 		print("Controller received signal to replot, passing on to plot_wrapper")
 		self.plotter.replot()#self.data_model, self.model)
 
 	def set_xlim_to_view(self):
+		"""Set the xlim to the current view"""
 		log.info(f"Setting xlim to current view: {self.plotter.canvas.ax_dict['main'].get_xlim()}")
 		cur_xlim = self.plotter.canvas.ax_dict['main'].get_xlim()
 
@@ -500,7 +554,9 @@ class GraphSettingsController():
 
 		left, right = cur_xlim
 		print(f"{cur_type} vs limrange: {self.model.plot_domain_limrange}")
-		if isinstance(cur_type, pd.Timestamp) or isinstance(cur_type, np.datetime64) or pd.api.types.is_datetime64_any_dtype(cur_type):  #Pd.timestamp to datetime
+		if (isinstance(cur_type, pd.Timestamp)
+      			or isinstance(cur_type, np.datetime64)
+				or pd.api.types.is_datetime64_any_dtype(cur_type)):  #Pd.timestamp to datetime
 			log.debug("Converting from datetime")
 			if left is not None:
 				left = matplotlib.dates.num2date(left).replace(tzinfo=None)
@@ -519,11 +575,19 @@ class GraphSettingsController():
 		top = min(1.0, top)
 
 		#Set appropriate ranges
-		if self.model.fft_line_range is not None and self.model.fft_line_range.max_val is not None and self.model.fft_line_range.min_val is not None:
-			self.model.fft_line_range_left = \
-				type(self.model.fft_line_range.max_val) (self.model.fft_line_range.min_val + bottom * self.model.fft_line_range.max_val) #type:ignore
-			self.model.fft_line_range_right = \
-				type(self.model.fft_line_range.max_val) (self.model.fft_line_range.min_val + top * self.model.fft_line_range.max_val) #type:ignore
+		if (self.model.fft_line_range is not None
+      			and self.model.fft_line_range.max_val is not None
+				and self.model.fft_line_range.min_val is not None):
+			self.model.fft_line_range_left = (
+				type(self.model.fft_line_range.max_val) (
+					self.model.fft_line_range.min_val + bottom * self.model.fft_line_range.max_val
+				) #type:ignore
+			)
+			self.model.fft_line_range_right = (
+				type(self.model.fft_line_range.max_val)(
+					(self.model.fft_line_range.min_val + top * self.model.fft_line_range.max_val)
+				)
+			)#type:ignore
 
 
 	#=================================================================

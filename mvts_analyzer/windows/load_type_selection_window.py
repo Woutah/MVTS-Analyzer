@@ -1,22 +1,35 @@
+"""
+Implements:
+LoadTypeSelectionDialog - A dialog to select the load type (overwrite or append) and the time range to load
 
+And helper classes:
+LoadSpecifications - A small datastructure to manage the loading type
+MainLoadType - Enum for the main load type (e.g. Append or OverWerwrite)
+DuplicatePolicy - Enum for the duplicate policy (e.g. Keep original or overwrite)
+
+"""
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from PySide6 import QtCore, QtWidgets
-from mvts_analyzer.widgets.DateTimeRange import DateTimeRange
-from mvts_analyzer.widgets.datastructures import LimitedRange
 from enum import Enum
 
-import logging
+from PySide6 import QtCore, QtWidgets
+
+from mvts_analyzer.widgets.datastructures import LimitedRange
+from mvts_analyzer.widgets.datetime_range import DateTimeRange
+
 log = logging.getLogger(__name__)
 
 ABSOLUTE_MIN_DATE = datetime(1900, 1, 1)
 ABSOLUTE_MAX_DATE = datetime(3000, 1, 1)
 
 class MainLoadType(Enum):
+	"""What method to use when loading the data"""
 	APPEND = 0
 	OVERWRITE = 1
 
 class DuplicatePolicy(Enum):
+	"""What to do with duplicate entries in the data when loading"""
 	KEEP_ORIGINAL = 0
 	OVERWRITE = 1
 
@@ -33,7 +46,9 @@ class LoadSpecifications():
 
 
 class LoadTypeSelectionDialog(QtWidgets.QDialog):
-	""""""
+	"""
+	A dialog to select the load type (overwrite or append) and the time range to load
+	"""
 	def __init__(self,
 			min_db_entrydate : datetime = datetime(1900, 1, 1),
 			max_dbentry_date : datetime = datetime(3000, 1, 1)
@@ -56,7 +71,8 @@ class LoadTypeSelectionDialog(QtWidgets.QDialog):
 		self.main_load_type_widget.addItems(["Append", "Overwrite"])
 		self.main_load_type_widget.currentTextChanged.connect(self._main_load_type_changed)
 		self.overwrite_warning = QtWidgets.QLabel("'overwrite' discards the currently loaded database")
-		self.main_load_type_widget.setToolTip("Should the whole database be overwritten? or should the new data be appended to the currently loaded data")
+		self.main_load_type_widget.setToolTip("Should the whole database be overwritten? or should the new data be "
+			"appended to the currently loaded data")
 		self.overwrite_warning.setStyleSheet("color: red;")
 		self.overwrite_warning.setVisible(False) #Append is default options --> no warning
 
@@ -76,7 +92,8 @@ class LoadTypeSelectionDialog(QtWidgets.QDialog):
 		self.load_rangetype_widget.currentTextChanged.connect(self._rangetype_changed)
 		self.datelayout.addWidget(QtWidgets.QLabel("Load from/until settings"), 50)
 		self.datelayout.addWidget(self.load_rangetype_widget, 50)
-		self.load_rangetype_widget.setToolTip("Which daterange will be requested all data in this time range will be added to the database")
+		self.load_rangetype_widget.setToolTip("Which daterange will be requested all data in this time range will be "
+			"added to the database")
 
 		self.main_layout.addLayout(self.datelayout)
 
@@ -179,6 +196,5 @@ class LoadTypeSelectionDialog(QtWidgets.QDialog):
 		self.close()
 
 	def get_selection(self):
+		"""Return the load-specifications datastructure"""
 		return self.return_specification
-
-

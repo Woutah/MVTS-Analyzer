@@ -1,20 +1,19 @@
-from PySide6 import QtWidgets, QtCore
-from mvts_analyzer.utility import GuiUtility
-from .range_slider import QRangeSlider
-from pydoc import locate
-
-import logging
-log = logging.getLogger(__name__)
-import datetime
 import copy
+import datetime
+import logging
+
+from PySide6 import QtCore, QtWidgets
+
 from mvts_analyzer.widgets import datastructures
 
+from .range_slider import QRangeSlider
 
-
-
-
+log = logging.getLogger(__name__)
 
 class DateTimeRange(QtWidgets.QWidget):
+	"""
+	Datetime range with 2 datetime-boxes and a slider
+	"""
 	rangeEdited = QtCore.Signal(object) #[datetime, datetime]
 	rangeChanged = QtCore.Signal(object)
 
@@ -27,8 +26,8 @@ class DateTimeRange(QtWidgets.QWidget):
 		# self.text_boxes = [QtWidgets.QLineEdit(), QtWidgets.QLineEdit()]
 
 		self.text_boxes = [
-			QtWidgets.QDateTimeEdit(calendarPopup=True),
-			QtWidgets.QDateTimeEdit(calendarPopup=True)
+			QtWidgets.QDateTimeEdit(calendarPopup=True), #type:ignore #Enables calendar popup - not in pyside doc?
+			QtWidgets.QDateTimeEdit(calendarPopup=True)#type:ignore 
 		]
 
 		#Only trigger callback after submitting value
@@ -44,8 +43,6 @@ class DateTimeRange(QtWidgets.QWidget):
 		#Add box + slider + box to layout
 		self._layout.addLayout(self._text_box_layout)
 		self._layout.addWidget(self._slider)
-		
-		# self.rangeEdited.connect(self.rangeChanged) #Edit is also a change (not other way around) TODO: more and more emits when widget uses multiple widgets (edit will emit both change and emit, which will both emit a change in next widget etc.) 
 
 		for curbox in self.text_boxes:
 			self._text_box_layout.addWidget(curbox)
@@ -54,10 +51,7 @@ class DateTimeRange(QtWidgets.QWidget):
 
 		self._slider.endValueChanged.connect(self._slider_changed)
 		self._slider.startValueChanged.connect(self._slider_changed)
-
-		# self._limited_range.changed.connect(lambda x: print("KAASASDASDSADSA")) #self.rangeEdited((x.left_val, x.right_val))) #Connect limitrange change to rangeEdited
 		
-
 		self.setLayout(self._layout)
 		self._slider.setEnabled(True)
 		self.show()
@@ -80,8 +74,8 @@ class DateTimeRange(QtWidgets.QWidget):
 		self.text_boxes[1].blockSignals(True)
 
 		# self.text_boxes[0].setMinimumDateTime()
-		self.text_boxes[1].setDateTime(self._limited_range.right_val)
-		self.text_boxes[0].setDateTime(self._limited_range.left_val)
+		self.text_boxes[1].setDateTime(self._limited_range.right_val) #type: ignore
+		self.text_boxes[0].setDateTime(self._limited_range.left_val) #type: ignore
 		# log.debug(f"After setting, the datetime in the boxes were: {self.text_boxes[0].dateTime()} { self.text_boxes[1].dateTime()}") #Make sure min >= max		
 		self.text_boxes[0].blockSignals(False)
 		self.text_boxes[1].blockSignals(False)
@@ -92,7 +86,8 @@ class DateTimeRange(QtWidgets.QWidget):
 		left_val, right_val = None, None
 
 		if self._limited_range is not None and self._limited_range.max_val is not None and self._limited_range.min_val is not None:
-			
+			if left is None or right is None:
+				return
 			left_val = (left / 100.0 * (self._limited_range.max_val - self._limited_range.min_val)) + self._limited_range.min_val
 			right_val =  (right / 100.0 * (self._limited_range.max_val - self._limited_range.min_val)) + self._limited_range.min_val
 
@@ -152,17 +147,20 @@ class DateTimeRange(QtWidgets.QWidget):
 		self.text_boxes[1].blockSignals(True)
 
 		if self._enforce_limits:
-			self.text_boxes[0].setMinimumDateTime(self._limited_range.min_val if self._limited_range.min_val is not None else datetime.datetime(2000, 1, 1))
-			self.text_boxes[1].setMaximumDateTime(self._limited_range.max_val if self._limited_range.max_val is not None else datetime.datetime(2200, 1, 1))
+			self.text_boxes[0].setMinimumDateTime(
+				self._limited_range.min_val if self._limited_range.min_val is not None else datetime.datetime(2000, 1, 1) #type:ignore #Works with python datetime
+			) 
+			self.text_boxes[1].setMaximumDateTime(
+				self._limited_range.max_val if self._limited_range.max_val is not None else datetime.datetime(2200, 1, 1) #type:ignore #Works with python datetime
+			)
 
 			# if self.text_boxes[0].dateTime() > 
 
 		if self._limited_range.min_val is None or not self._enforce_limits or self.text_boxes[0].dateTime() > self._limited_range.min_val:
-			# self.text_boxes[1].setMinimumDateTime(self.text_boxes[0].dateTime()) #Make sure min >= max
-			self.text_boxes[1].setMinimumDateTime(self._limited_range.left_val) #Make sure min >= max
+			self.text_boxes[1].setMinimumDateTime(self._limited_range.left_val) #Make sure min >= max #type:ignore
 
 		if self._limited_range.max_val is None or not self._enforce_limits or self.text_boxes[1].dateTime() < self._limited_range.max_val:
-			self.text_boxes[0].setMaximumDateTime(self._limited_range.right_val) #Make sure max <= min
+			self.text_boxes[0].setMaximumDateTime(self._limited_range.right_val) #Make sure max <= min #type:ignore 
 
 		self.text_boxes[0].blockSignals(False)
 		self.text_boxes[1].blockSignals(False)

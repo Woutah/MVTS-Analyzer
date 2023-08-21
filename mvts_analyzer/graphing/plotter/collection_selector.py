@@ -1,7 +1,7 @@
 """
-A helper class for selecting points in matplotlib axes. 
+A helper class for selecting points in matplotlib axes.
 When the plot is created, we pass the axes, and the pandas indexes to this class. Upon selection, the pandas
-indexes are emitted. 
+indexes are emitted.
 """
 import logging
 import time
@@ -17,7 +17,8 @@ from PySide6 import QtCore, QtWidgets
 
 log = logging.getLogger(__name__)
 
-class CollectionSelector(QtWidgets.QWidget):  #Inspired from : https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
+class CollectionSelector(QtWidgets.QWidget):
+	#Inspired from : https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
 	"""
 	Select indices from a matplotlib collection using `LassoSelector`.
 
@@ -166,11 +167,3 @@ class CollectionSelector(QtWidgets.QWidget):  #Inspired from : https://matplotli
 
 		log.debug(f"Currently selected locs: {list(pd_locs)[:min(len(pd_locs), 3)]}... etc (len={len(pd_locs)})")
 		self.pdSelectionEdited.emit(pd_locs)
-		# return pd_locs
-
-
-
-
-
-
-
