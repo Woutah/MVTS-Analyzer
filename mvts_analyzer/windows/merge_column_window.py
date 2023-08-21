@@ -1,3 +1,7 @@
+"""
+Implements the MergeColumnWindow - The logic for the merge-column-window that allows the user to quickly
+	merge and delete columns from the dataframe
+"""
 import logging
 import typing
 
@@ -9,44 +13,38 @@ from mvts_analyzer.ui.merge_column_window_ui import Ui_MergeColumnWindow
 log = logging.getLogger(__name__)
 
 class MergeColumnWindow():
+	"""
+	The merge-column-window logic, manage user input and call the graph_data_model to do the actual work
+	when the user presses the rename button
+	"""
 
 	def __init__(self, data_model : GraphData, parent=None) -> None:
 
-		self.ui = Ui_MergeColumnWindow()
+		self.ui = Ui_MergeColumnWindow() #pylint: disable=invalid-name
 		self.data_model = data_model
 		self.window = QtWidgets.QMainWindow(parent=parent)
 		self.ui.setupUi(self.window)
 		self.ui.returnMsgLabel.setText("")
 
 
-		# self.ui.columnOptionsCombobox.
-
-		# self.data_model.dfColumnsChanged.connect(lambda *_: self.reload_all_options())
-
 		self.data_model.dfChanged.connect(lambda *_: self.reload_all_options())
 		self.window.show()
 
 
 		self.ui.newTypeComboBox.addItems(["Destination", "Source", "string", "Int64", "int64", "float", "category"])
-		# self.ui.newTypeComboBox
-
-		# self.newTypeTranslationDict = {
-		# 		"Keep Source"				:	"",
-		# 		"string"					:	"str",
-		# 		"integer (without None)"	:	"",
-		# 		"integer (with None)"		:	""
-		# }
-
 		self.ui.cancelBtn.pressed.connect(self.window.close)
 		self.ui.renameBtn.pressed.connect(self.attempt_merge)
-
 		self.reload_all_options()
 
-		# self.ui.columnOptionsCombobox.currentTextChanged.connect(self.column_selection_changed)
-		pass
+
+		self.effect = None
+		self.animation = None
 
 
 	def attempt_merge(self):
+		"""
+		Get the data from the UI and try to merge the columns (or delete if destination is None)
+		"""
 		src = self.ui.sourceColumnCombobox.currentText()
 		dest = self.ui.destinationColumnCombobox.currentText()
 		preserve = self.ui.preserveSourceCheckBox.isChecked()

@@ -1,4 +1,6 @@
-
+"""
+Implements several utility functions for the GUI
+"""
 #TODO: put this in main directory and make accesible everywhere
 
 import logging
@@ -18,18 +20,18 @@ def get_dict_entry(thedict : dict, location : list):
 	Returns:
 		bool: Whether full-config layout is valid
 	"""
-	x = None
+	val = None
 	try:
 		cur = thedict
 		for i in location: #walk through nested location
 			cur = cur[i]
-		x = cur
+		val = cur
 		# x = thedict[location]
 	except (KeyError, TypeError) as err:
 		log.error(f'Could find location {location} , error: {err}')
 		return None
 
-	return x
+	return val
 
 
 def safe_parse_strings(item, cast_using : str, desired_type = "None"):
@@ -55,15 +57,17 @@ def safe_parse_strings(item, cast_using : str, desired_type = "None"):
 			return item
 		else:
 			log.info(f"Item: {item} not of desired type: {desired_type}, now trying to parse it...")
-	except (ValueError, TypeError) as err:
-		log.info(f"Could not cast desired_type (string): {desired_type} to a valid comparable type ({err}), now trying to cast...")
+	except (ValueError, TypeError):
+		log.info(f"Could not cast desired_type (string): {desired_type} to a valid comparable type "
+			"({err}), now trying to cast...")
 
 
 	try:
 		new_type = eval(cast_using) #pylint: disable=eval-used
 		new_val = new_type(item) #Else, cast
-	except (ValueError, TypeError) as err:
-		log.info(f"Could not cast {str(new_val)} to a type specified by conversion function {str(cast_using)}, resetting to unknown - Err: {err}")
+	except (ValueError, TypeError):
+		log.info(f"Could not cast {str(new_val)} to a type specified by conversion function {str(cast_using)}, "
+	   		"resetting to unknown - Err: {err}")
 
 	return new_val
 
@@ -99,7 +103,8 @@ def safe_parse_new(item, cast_using : typing.Callable, default=None) -> typing.T
 	try:
 		new_val = cast_using(item) #Else, cast
 	except (ValueError, TypeError) as err:
-		log.info(f"Could not cast {str(new_val)} to a type specified by conversion function: {str(cast_using)}, returning None - Err: {err}")
+		log.info(f"Could not cast {str(new_val)} to a type specified by conversion function: "
+	   		f"{str(cast_using)}, returning None - Err: {err}")
 		return False, default
 
 	return True, new_val
