@@ -16,7 +16,7 @@ import pandas as pd
 from PySide6 import QtCore
 
 # from mvts_analyzer.utility import GuiUtility
-from mvts_analyzer.utility import DfUtility
+from mvts_analyzer.utility import df_utility
 from mvts_analyzer.widgets.datastructures import LimitedRange
 
 log = logging.getLogger(__name__)
@@ -288,11 +288,11 @@ class GraphData(QtCore.QObject):
 
 	def get_fft_columns(self):
 		"""Return the fft-capable column (columns that contain numpy arrays)"""
-		return DfUtility.get_fft_columns(self._df)
+		return df_utility.get_fft_columns(self._df)
 
 	def get_lbl_columns(self):
 		"""Return the label-columns (columns that contain str items)"""
-		return DfUtility.get_lbl_columns(self._df)
+		return df_utility.get_lbl_columns(self._df)
 
 
 	def set_selection_lbls(self, column : str, label : typing.Any):
@@ -317,7 +317,7 @@ class GraphData(QtCore.QObject):
 		"""Save only the selected datapoints to a file"""
 		if self._df is None:
 			raise ValueError("No dataframe loaded, cannot save selection.")
-		return DfUtility.save_dataframe(self._df.loc[list(self._df_selection)], save_path=save_path)
+		return df_utility.save_dataframe(self._df.loc[list(self._df_selection)], save_path=save_path)
 
 	def save_df_not_hidden_only(self, save_path : str):
 		"""Save all non-hidden datapoints to a file (is different from view-only save)"""
@@ -325,13 +325,13 @@ class GraphData(QtCore.QObject):
 			raise ValueError("No dataframe loaded, cannot save dataframe.")
 		all_indx = set(list(self._df.index))
 		tosave = all_indx - self.hidden_datapoints
-		return DfUtility.save_dataframe(self._df.loc[list(tosave)], save_path=save_path)
+		return df_utility.save_dataframe(self._df.loc[list(tosave)], save_path=save_path)
 
 	def save_df(self, save_path : str):
 		"""Save the whole dataframe to a file"""
 		if self._df is None:
 			raise ValueError("No dataframe loaded, cannot save dataframe.")
-		return DfUtility.save_dataframe(self._df, save_path)
+		return df_utility.save_dataframe(self._df, save_path)
 
 
 
@@ -474,7 +474,7 @@ class GraphData(QtCore.QObject):
 		"""
 		log.info(f"Reloading current database from file: {file_source}")
 		if file_source: #if path has been specified
-			success, msg, new_df = DfUtility.load_dataframe_using_file_extension(file_source=file_source)
+			success, msg, new_df = df_utility.load_dataframe_using_file_extension(file_source=file_source)
 			# new_df = pd.read_pickle(file_source)
 
 			if not success:

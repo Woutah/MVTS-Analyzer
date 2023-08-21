@@ -19,7 +19,7 @@ from mvts_analyzer.graphing.graph_settings_view import GraphSettingsView
 from mvts_analyzer.graphing.plotter.plot_wrapper import QPlotter
 from mvts_analyzer.res.Paths import Paths
 from mvts_analyzer.ui.main_window_ui import Ui_MainWindow
-from mvts_analyzer.utility.GuiUtility import create_qt_warningbox
+from mvts_analyzer.utility.gui_utility import create_qt_warningbox
 from mvts_analyzer.windows.apply_python_window import ApplyPythonWindow
 from mvts_analyzer.windows.merge_column_window import MergeColumnWindow
 from mvts_analyzer.windows.rename_label_window import RenameLabelWindow

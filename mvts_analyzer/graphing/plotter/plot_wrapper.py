@@ -44,8 +44,8 @@ from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.graphing.plotter.collection_selector import \
     CollectionSelector
 from mvts_analyzer.res.Paths import Paths
-from mvts_analyzer.utility.GuiUtility import catch_show_exception_in_popup_decorator
-from mvts_analyzer.utility.GuiUtility import create_qt_warningbox
+from mvts_analyzer.utility.gui_utility import catch_show_exception_in_popup_decorator
+from mvts_analyzer.utility.gui_utility import create_qt_warningbox
 
 log = logging.getLogger(__name__)
 

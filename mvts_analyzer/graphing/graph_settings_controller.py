@@ -17,7 +17,7 @@ from mvts_analyzer.graphing.graph_data import GraphData
 from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.graphing.graph_settings_view import GraphSettingsView
 from mvts_analyzer.graphing.plotter.plot_wrapper import QPlotter
-from mvts_analyzer.utility import DfUtility, GuiUtility
+from mvts_analyzer.utility import df_utility, gui_utility
 from mvts_analyzer.widgets.datastructures import LimitedRange
 from mvts_analyzer.windows.load_type_selection_window import (
     DuplicatePolicy, LoadTypeSelectionDialog, MainLoadType)
@@ -394,7 +394,7 @@ class GraphSettingsController():
 
 	#======================  Outer settings --> model/plotter ===========================
 
-	@GuiUtility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Could not copy plot</b>")
+	@gui_utility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Could not copy plot</b>")
 	def copy_plot_to_clipboard(self):
 		"""Copy the current plot figure to the clipboard"""
 		with io.BytesIO() as buffer:
@@ -415,7 +415,7 @@ class GraphSettingsController():
 
 		if not self.data_model.validate_df(df, inplace_try_fix=True):
 			log.warning("Error when validating dataframe... Could not append it.")
-			GuiUtility.create_qt_warningbox("Error when validating dataframe... Could not append it.", "Could not append data")
+			gui_utility.create_qt_warningbox("Error when validating dataframe... Could not append it.", "Could not append data")
 			return
 
 		if dt_column_df in df.columns: #If datetime specified
@@ -449,9 +449,9 @@ class GraphSettingsController():
 
 		fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', #type: ignore
 				self.data_model.file_source, "Pickled dataframes/Excel Sheet/CSV (*.pkl *.*, *.xlsx, *.csv)")
-		success, msg, df = DfUtility.load_dataframe_using_file_extension(fname[0])
+		success, msg, df = df_utility.load_dataframe_using_file_extension(fname[0])
 		if not success or df is None:
-			GuiUtility.create_qt_warningbox(msg, "Error")
+			gui_utility.create_qt_warningbox(msg, "Error")
 			return
 
 		self.append_df_popup(df=df)
@@ -459,7 +459,7 @@ class GraphSettingsController():
 
 
 
-	@GuiUtility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Could not load dataframe</b>")
+	@gui_utility.catch_show_exception_in_popup_decorator(custom_error_msg="<b>Could not load dataframe</b>")
 	def load_df_popup(self):
 		"""
 		Show a popup to load a dataframe from file
@@ -485,7 +485,7 @@ class GraphSettingsController():
 			log.info(f"Trying to save to path {fname}")
 			success, retval = save_function(fname)
 			if not success:
-				GuiUtility.create_qt_warningbox(retval, "Error")
+				gui_utility.create_qt_warningbox(retval, "Error")
 		else:
 			log.error(f"Could not save under name: {fname}")
 
@@ -508,7 +508,7 @@ class GraphSettingsController():
 		"""Create popup to save the currently selected datapoints only"""
 		if self.data_model._df is None:
 			log.warning("Could not save selection only, no dataframe loaded")
-			GuiUtility.create_qt_warningbox("Could not save selection, no dataframe loaded", "Warning")
+			gui_utility.create_qt_warningbox("Could not save selection, no dataframe loaded", "Warning")
 			return
 		percentage = 0
 		dflen = len(self.data_model._df)
@@ -526,7 +526,7 @@ class GraphSettingsController():
 		"""Create popup to save the non-hidden datapoints only"""
 		if self.data_model._df is None:
 			log.warning("Could not save selection only, no dataframe loaded")
-			GuiUtility.create_qt_warningbox("Could not save selection, no dataframe loaded", "Warning")
+			gui_utility.create_qt_warningbox("Could not save selection, no dataframe loaded", "Warning")
 			return
 		log.debug(self.data_model.file_source.rsplit("\\", 1)[0])
 		percentage = 0
