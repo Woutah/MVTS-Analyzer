@@ -138,7 +138,7 @@ We can use the ```--help``` option to see what options are available:
 - Windows 11 - Python 3.10.8
 - Windows 11 - Python 3.8.17
 - Ubuntu 22.04.2 LTS - Python 3.8.0
-
+- Windows 10 - Python 3.8.17
 
 
 # Acknowledgments
