@@ -61,7 +61,7 @@ class LabelerWindowView(QtWidgets.QWidget):
 		self.setLabelBtnPressed.emit(col,label)
 
 
-	def set_lbl_column_options(self, options : typing.List[str], cur_option : str | None = None) -> None:
+	def set_lbl_column_options(self, options : typing.List[str], cur_option : typing.Optional[str] = None) -> None:
 		"""Set the options for the column dropdown (e.g. on target dataframe change)"""
 
 		cur_text = self.col_dropdown.currentText()
@@ -80,7 +80,7 @@ class LabelerWindowView(QtWidgets.QWidget):
 
 		self.col_dropdown.blockSignals(False)
 
-	def set_lbl_lbl_options(self, options : typing.List[str], cur_option : str | None = None) -> None:
+	def set_lbl_lbl_options(self, options : typing.List[str], cur_option : typing.Optional[str] = None) -> None:
 		"""Set the options for the currently selected column"""
 
 		cur_text = self.lbl_dropdown.currentText()

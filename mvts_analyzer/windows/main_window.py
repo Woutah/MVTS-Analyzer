@@ -22,6 +22,7 @@ from mvts_analyzer.utility.gui_utility import create_qt_warningbox
 from mvts_analyzer.windows.apply_python_window import ApplyPythonWindow
 from mvts_analyzer.windows.merge_column_window import MergeColumnWindow
 from mvts_analyzer.windows.rename_label_window import RenameLabelWindow
+import typing
 import mvts_analyzer.res.app_resources_rc #pylint: disable=unused-import #type: ignore
 
 matplotlib.use('Qt5Agg')
@@ -64,7 +65,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 		if python_appliables_path is None:
-			self._python_appliables_path : str | None = self._settings.value("python_appliables_path", None) #type: ignore
+			self._python_appliables_path : typing.Optional[str] 
+				= self._settings.value("python_appliables_path", None) #type: ignore
 			if self._python_appliables_path is None:
 				cur_path = os.path.dirname(os.path.realpath(__file__))
 				self._python_appliables_path = os.path.join(cur_path, "..", "python_appliables")

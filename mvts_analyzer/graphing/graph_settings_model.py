@@ -216,7 +216,7 @@ class GraphSettingsModel(GraphSettingsModelData, QtCore.QObject):
 		return self._fft_column
 
 	@fft_column.setter
-	def fft_column(self, new_col : str | None):
+	def fft_column(self, new_col : typing.Optional[str]):
 		if new_col != self._fft_column:
 			log.debug(f"FFT column now {new_col}")
 			# self._fft_toggle = new_value

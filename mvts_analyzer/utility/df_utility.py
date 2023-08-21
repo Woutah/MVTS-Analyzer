@@ -2,13 +2,15 @@
 Contains several utility functions for working with dataframes
 """
 import logging
+import typing
+
 import numpy as np
 import pandas as pd
 
 log = logging.getLogger(__name__)
 
 
-def get_fft_columns(dataframe : pd.DataFrame | None) -> dict[str, int]:
+def get_fft_columns(dataframe : typing.Optional[pd.DataFrame]) -> dict[str, int]:
 	"""Get a dictionary of the form:
 			{ fft_col1 : lines }
 		Where lines denotes the amount of line.
@@ -32,7 +34,7 @@ def get_fft_columns(dataframe : pd.DataFrame | None) -> dict[str, int]:
 	return fft_cols
 
 
-def get_lbl_columns(dataframe: pd.DataFrame | None) -> list[str]:
+def get_lbl_columns(dataframe: typing.Optional[pd.DataFrame]) -> list[str]:
 	"""
 	Get the names of columns containing only strings (lbl columns) - or ints/categories
 

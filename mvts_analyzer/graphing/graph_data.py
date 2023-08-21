@@ -44,7 +44,7 @@ class GraphData(QtCore.QObject):
 	def __init__(self, df_path = None):
 		super().__init__()
 
-		self._df : pd.DataFrame | None = None
+		self._df : typing.Optional[pd.DataFrame] = None
 		self._df_selection : set = set([]) #Set of pandas locs
 		self._file_source : str = ""
 
@@ -67,7 +67,7 @@ class GraphData(QtCore.QObject):
 		"""Hide all datapoints except those selected"""
 		self.hide_all_datapoints_except(self._df_selection)
 
-	def hide_datapoints(self, idxes : set | None):
+	def hide_datapoints(self, idxes : typing.Optional[set]):
 		"""Hide the passed (by pandas-idx) datapoints
 
 		Args:
@@ -267,7 +267,7 @@ class GraphData(QtCore.QObject):
 			self.dfChanged.emit()
 
 
-	def get_col_limrange(self, col : str | None):
+	def get_col_limrange(self, col : typing.Optional[str]):
 		"""Get the limrange for a column (min/max), pd.Timestamp columns arre converted to pydatetimes
 
 		Args:
@@ -369,7 +369,7 @@ class GraphData(QtCore.QObject):
 				dst_column : str,
 				mode : typing.Literal["Source priority", "Destination priority"] = "Source priority",
 				preserve_source : bool = False,
-				astype : str | None = None
+				astype : typing.Optional[str] = None
 			):
 		"""
 		Merge two columns into one, either by overwriting the destination column, or by creating a new column.
@@ -442,7 +442,7 @@ class GraphData(QtCore.QObject):
 
 
 
-	def validate_df(self, new_df : pd.DataFrame | None, inplace_try_fix : bool = True):
+	def validate_df(self, new_df : typing.Optional[pd.DataFrame], inplace_try_fix : bool = True):
 		"""validates a df (to see if it is loadable) and can also try to fix it
 
 		Args:
@@ -537,7 +537,7 @@ class GraphData(QtCore.QObject):
 			new_df : pd.DataFrame,
 			append_mode : bool = False,
 			duplicate_overwrite : bool = False,
-			resample_seconds : int | None = None #TODO: use datetime.timedelta instead?
+			resample_seconds : typing.Optional[int] = None #TODO: use datetime.timedelta instead?
 		):
 		"""Loads an existing DF
 
