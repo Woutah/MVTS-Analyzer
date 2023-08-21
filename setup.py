@@ -21,13 +21,13 @@ setup(
 		],
 	},
 	install_requires=[ #Generated using pipreqs
-								#			Python 3.10 	
-        'keyboard>=0.13.5',		 #0.13.5 	= Tested working
-		'matplotlib>=3.7.2',	 #3.7.2 	= Tested working
-		'numpy>=1.15.0',		 #1.25.2 	= Tested working
-		'pandas>=2.0.3',		 #2.0.3 	= Tested working
-		'PySide6>=6.5.2',		 #6.5.2 	= Tested working
-		'scikit_learn>=1.3.0',	 #1.3.0		= Tested working
-		'scikit-image>=0.15',		 #0.21 		= Tested working
+									#Python 3.10		Python 3.8
+        'keyboard>=0.10.4',			#0.13.5 			0.10.5
+		'matplotlib>=3.6.0',		#3.7.2 				3.6.0
+		'numpy>=1.15.0',			#1.25.2 			1.15.0
+		'pandas>=1.2.0',			#2.0.3				1.2.0
+		'PySide6>=6.2.0',			#6.5.2				6.2.0
+		# 'scikit-image>=0.15',		#0.21				0.15  #Only used for y-resolution-reduction for fft
+		# 'scikit-learn>=1.3.0',	#1.3.0 #Only used fot certain data-analysis functions (not yet used in GUI)
 	]
 )

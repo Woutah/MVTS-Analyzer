@@ -83,7 +83,7 @@ def save_dataframe(dataframe : pd.DataFrame, save_path : str, locs=None):
 		dataframe.loc[locs].to_pickle(save_path)
 	elif file_type == "xlsx":
 		fft_cols = get_fft_columns(dataframe) #Excel doesn't handle arrays very well, so on't use them
-	
+
 		dataframe.loc[locs, dataframe.columns.difference(fft_cols.keys())].dropna( #type: ignore
 			how='all', axis=1).to_excel(save_path, sheet_name="Sheet1", index_label="Index") #Drop empty columns
 			#TODO: let user pick sheet?
