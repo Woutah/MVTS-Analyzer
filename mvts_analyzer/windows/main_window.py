@@ -65,8 +65,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 		if python_appliables_path is None:
-			self._python_appliables_path : typing.Optional[str] 
-				= self._settings.value("python_appliables_path", None) #type: ignore
+			self._python_appliables_path : typing.Optional[str] = \
+				self._settings.value("python_appliables_path", None) #type: ignore
 			if self._python_appliables_path is None:
 				cur_path = os.path.dirname(os.path.realpath(__file__))
 				self._python_appliables_path = os.path.join(cur_path, "..", "python_appliables")

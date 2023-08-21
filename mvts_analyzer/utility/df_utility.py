@@ -10,12 +10,14 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 
-def get_fft_columns(dataframe : typing.Optional[pd.DataFrame]) -> dict[str, int]:
+def get_fft_columns(dataframe : typing.Optional[pd.DataFrame]) -> typing.Dict[str, int]:
 	"""Get a dictionary of the form:
 			{ fft_col1 : lines }
 		Where lines denotes the amount of line.
 		All columns containing numpy arrays are considered "fft columns".
 		Linecount is determined by the first not-none value in these array columns.
+
+		If no fft columns are found, an empty dict is returned.
 	Returns:
 		fft_cols[dict]: dictionary of the form { fft_col : lines }
 	"""
@@ -34,7 +36,7 @@ def get_fft_columns(dataframe : typing.Optional[pd.DataFrame]) -> dict[str, int]
 	return fft_cols
 
 
-def get_lbl_columns(dataframe: typing.Optional[pd.DataFrame]) -> list[str]:
+def get_lbl_columns(dataframe: typing.Optional[pd.DataFrame]) -> typing.List[str]:
 	"""
 	Get the names of columns containing only strings (lbl columns) - or ints/categories
 

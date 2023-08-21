@@ -73,7 +73,7 @@ class RenameLabelWindow():
 			self.ui.returnMsgLabel.setStyleSheet("color: red")
 
 
-	def get_rename_options(self) -> list[str]:
+	def get_rename_options(self) -> typing.List[str]:
 		"""
 		Returns a list of the rename-options for the current column selection (annotations already present in col)
 		"""
