@@ -7,10 +7,12 @@ import logging
 import os
 import sys
 import traceback
+import typing
 
 import matplotlib
 from PySide6 import QtCore, QtGui, QtWidgets
 
+import mvts_analyzer.res.app_resources_rc  # pylint: disable=unused-import #type: ignore
 from mvts_analyzer.graphing.graph_data import GraphData
 from mvts_analyzer.graphing.graph_settings_controller import \
     GraphSettingsController
@@ -22,8 +24,6 @@ from mvts_analyzer.utility.gui_utility import create_qt_warningbox
 from mvts_analyzer.windows.apply_python_window import ApplyPythonWindow
 from mvts_analyzer.windows.merge_column_window import MergeColumnWindow
 from mvts_analyzer.windows.rename_label_window import RenameLabelWindow
-import typing
-import mvts_analyzer.res.app_resources_rc #pylint: disable=unused-import #type: ignore
 
 matplotlib.use('Qt5Agg')
 log = logging.getLogger(__name__)
@@ -51,9 +51,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.ui.setupUi(self)
 
 		#========= Settings ================
-		if settings_path is None or not os.path.exists(settings_path):
+		settings_dir = settings_path
+		if settings_path is not None:
+			settings_dir = os.path.dirname(settings_path)
+		if settings_path is None or not os.path.exists(settings_dir):
+			log.info("Loading/Saving settings from/to default location")
 			self._settings = QtCore.QSettings("MVTS-Tools", "MVTS-Analyzer")
 		else:
+			log.info(f"Loading settings from {settings_path}")
 			self._settings = QtCore.QSettings(settings_path, QtCore.QSettings.Format.IniFormat)
 
 

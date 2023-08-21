@@ -1,6 +1,8 @@
 """
 	This file containts several data analysis methods designed to run on a Dataset Class
 	(PCA, clustering, some classification tests)
+
+	TODO: add these to the example-scripts folder to make some preliminary analysis easier
 """
 
 import logging
@@ -9,14 +11,10 @@ import typing
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import sklearn
-import sklearn.cluster
 from matplotlib import cm
-from sklearn import (decomposition, model_selection, preprocessing)
-from sklearn.metrics import classification_report
 
 log = logging.getLogger(__name__)
-
+#pylint: disable=import-outside-toplevel #Make scikit-learn optional
 
 def plot_subset_columns(dataset, columns, label_column_name = "Classification"):
 	"""
@@ -54,6 +52,7 @@ def get_pca(df, components =3, scale=True ):  #pylint: disable=invalid-name
 		components (int, optional): Number of components to return. Defaults to 3.
 		scale (bool, optional): Wether to scale the data before PCA. Defaults to True.
 	"""
+	from sklearn import (decomposition, preprocessing)
 	log.info("Generating 3d PCA plot...")
 	df_pca = df.copy()
 	if scale: # SCikit learn automatically centers, but does not scale data (MinMaxScaler is used here)
@@ -238,6 +237,7 @@ def plot_df_scatter_class(
 
 def k_cluster(df, n_clusters = 4): #pylint: disable=invalid-name
 	"""Cluster using k-means"""
+	import sklearn.cluster
 	df = df[df.columns.difference(["Date", "Time", "DateTime", "Classification"])]
 	df = df.dropna() #remove nan values
 	model = sklearn.cluster.KMeans(n_clusters=n_clusters).fit(df) #Train using the trainset (split[0]), without labels
@@ -253,6 +253,10 @@ def k_means_classification(dataset, label_column_name= "Classification", n_clust
 	Do k-means clustering, then determine the label of that cluster using majority vote. We can then use this
 	to classify new data points by finding the nearest cluster and using the majority vote label of that cluster.
 	"""
+	import sklearn
+	import sklearn.cluster
+	from sklearn import (model_selection)
+	from sklearn.metrics import classification_report
 	#Simple k-means classification using majority-vote for each cluster center, contains a test as well
 	df_norm = dataset.get_df_norm()
 	train_df = df_norm[df_norm.columns.difference(["Date", "Time"])] #Train on all (normalized) data except

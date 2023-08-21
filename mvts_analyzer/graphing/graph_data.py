@@ -558,7 +558,8 @@ class GraphData(QtCore.QObject):
 				merged_df = pd.concat([new_df, self._df])
 
 			if resample_seconds is not None:
-				merged_df = merged_df.groupby([pd.Grouper(freq='1S', key=self._dt_col)]).last() #Group every 1 seconds together
+				#Group every x seconds together if so desired
+				merged_df = merged_df.groupby([pd.Grouper(freq=f'{resample_seconds}S', key=self._dt_col)]).last() 
 			merged_df = merged_df.sort_values(by=self._dt_col)[::-1]
 			merged_df.reset_index(inplace=True)
 

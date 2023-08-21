@@ -5,6 +5,7 @@ tests/
 old/
 old2/
 Output/
+settings.ini
 
 mvts_analyzer/res/icons/icon_creation_files
 

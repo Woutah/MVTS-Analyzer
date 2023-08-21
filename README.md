@@ -18,6 +18,9 @@ MVTS-Analyzer is an open-source Python app/package for plotting, analyzing and a
 	- [GitHub](#github)
 	- [PyPi](#pypi)
 - [Running](#running)
+	- [Tested on](#tested-on)
+- [Acknowledgments](#acknowledgments)
+- [Notes](#notes)
 
 # Features
 
@@ -129,3 +132,17 @@ We can use the ```--help``` option to see what options are available:
 | ```-f``` or ```--file``` | FILE | Path to the initial data to load (`.xlsx`, `.csv` or pickled Pandas Dataframe) |
 | ```-m``` or ```--use_monitor``` | MONITOR | Integer-index on which to launch the app |
 | ```-d``` or ```--dark_mode``` | - | Enables dark mode |
+
+
+## Tested on
+- Windows 11 - python 3.10.8
+- Windows 11 - python 3.8.17
+
+
+
+# Acknowledgments
+This project uses several Icons from the Tango-Icons library. The icons can be found [here](https://commons.wikimedia.org/wiki/Tango_icons).
+
+
+# Notes
+- If y-resolution reduction is desired (for FFT-applications), ```scikit-image>=0.15``` should be installed as well

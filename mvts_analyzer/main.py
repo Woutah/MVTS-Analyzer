@@ -69,9 +69,9 @@ def main(debug_level=logging.INFO):
 
 	if args.example:
 		graph_model_args["df_path"] = os.path.join(
-			os.path.dirname(os.path.realpath(__file__)), 
+			os.path.dirname(os.path.realpath(__file__)),
 			"example",
-			"example_data.xlsx"
+			"example_data.csv"
 		)
 	elif args.file is not None:
 		graph_model_args["df_path"] = args.file

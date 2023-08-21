@@ -13,10 +13,12 @@ import datetime
 import logging
 import math
 import numbers
+import os
 import time
 import traceback
+import typing
 from cmath import nan
-import os
+
 import keyboard
 import matplotlib
 import matplotlib.axes
@@ -37,15 +39,13 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import \
     NavigationToolbar2QT as NavigationToolbar
 from PySide6 import QtWidgets
-from skimage.measure import block_reduce
-import typing
 
 from mvts_analyzer.graphing.graph_data import GraphData, OperationType
 from mvts_analyzer.graphing.graph_settings_model import GraphSettingsModel
 from mvts_analyzer.graphing.plotter.collection_selector import \
     CollectionSelector
-from mvts_analyzer.utility.gui_utility import catch_show_exception_in_popup_decorator
-from mvts_analyzer.utility.gui_utility import create_qt_warningbox
+from mvts_analyzer.utility.gui_utility import (
+    catch_show_exception_in_popup_decorator, create_qt_warningbox)
 
 log = logging.getLogger(__name__)
 
@@ -476,7 +476,17 @@ class QPlotter(QtWidgets.QWidget):
 		fft_z = np.swapaxes(fft_z, 0, 1)
 
 		if y_res_reduction > 1:
+			try:
+				from skimage.measure import block_reduce #pylint: disable=import-outside-toplevel
+			except ImportError as err:
+				log.warning(f"Could not import skimage, please install scikit-image to use y-resolution reduction ({err})")
+				create_qt_warningbox(
+					f"<b>Could not import skimage, please make sure the 'scikit-image' package is installed when using "
+					f"y-resolution reduction <b><br>{err}"
+				)
+				y_res_reduction = 1
 			fft_z = block_reduce(fft_z, block_size=(y_res_reduction,1), func=np.mean) #type:ignore reduce y-resolution
+
 		log.debug(f"FFT max is : {np.max(fft_z)}")
 		log.debug(f"Reduction factor: {y_res_reduction}  --- Z size is: {fft_z.shape}   Y shape is: {fft_y.shape}")
 
