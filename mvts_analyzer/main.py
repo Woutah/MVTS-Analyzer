@@ -62,7 +62,8 @@ def main(debug_level=logging.INFO):
 
 	if args.dark_mode:
 		cur_path = os.path.dirname(os.path.realpath(__file__))
-		app.setStyleSheet(open(os.path.join(cur_path, "qt-dark-theme.stylesheet"), encoding="utf-8").read())
+		app.setStyleSheet(
+			open(os.path.join(cur_path, "res", "stylesheets", "qt-dark-theme.stylesheet"), encoding="utf-8").read())
 		plt.style.use('dark_background')
 
 	graph_model_args = {}
