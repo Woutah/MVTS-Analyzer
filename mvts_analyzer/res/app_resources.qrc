@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="Icons">
+    <file>icons/Custom Icons/python-folder-open.svg</file>
     <file>app_icon_3d.png</file>
     <file>icons/Custom Icons/document-save-selection.svg</file>
     <file>icons/Custom Icons/execute-python.svg</file>

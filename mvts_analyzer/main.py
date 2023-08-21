@@ -2,16 +2,15 @@
 The main entry point - we launch the app from here (optionally with arguments)
 """
 
-import logging
-
 import argparse
+import logging
+import os
 import sys
 
 import matplotlib.pyplot as plt
 from PySide6 import QtGui, QtWidgets
-from res.Paths import Paths
-
 from mvts_analyzer.windows.main_window import MainWindow
+
 log = logging.getLogger(__name__)
 
 
@@ -57,7 +56,8 @@ def main(debug_level=logging.INFO):
 	app = QtWidgets.QApplication(sys.argv)
 
 	if args.dark_mode:
-		app.setStyleSheet(open(Paths.DarkStyleSheetFilePath, encoding="utf-8").read())
+		cur_path = os.path.dirname(os.path.realpath(__file__))
+		app.setStyleSheet(open(os.path.join(cur_path, "qt-dark-theme.stylesheet"), encoding="utf-8").read())
 		plt.style.use('dark_background')
 
 	main_win = MainWindow(graph_model_args={"df_path": args.file})

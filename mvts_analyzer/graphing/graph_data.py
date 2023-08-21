@@ -260,6 +260,12 @@ class GraphData(QtCore.QObject):
 		"""Return _df NOTE: this is not a copy!!!"""
 		return self._df
 
+	def set_df(self, new_df : pd.DataFrame, emit_changed = False):
+		"""Sets the new dataframe """
+		self._df = new_df
+		if emit_changed:
+			self.dfChanged.emit()
+
 
 	def get_col_limrange(self, col : str | None):
 		"""Get the limrange for a column (min/max), pd.Timestamp columns arre converted to pydatetimes
