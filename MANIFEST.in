@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+include mvts_analyzer/example/*.csv
+include mvts_analyzer/example/*.xlsx

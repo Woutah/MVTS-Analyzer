@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name = "MVTS-Analyzer",
-	version= "0.0.1",
+	version= "0.0.2",
 	packages=find_packages('.'),
     description=("Plotting, annotation and analysis tools for multivariate time series data"),
     long_description=open('README.md', encoding='utf-8').read(),
@@ -19,6 +19,17 @@ setup(
             'mvts-analyzer=mvts_analyzer.main:main',
             'mvtsa=mvts_analyzer.main:main'
 		],
+	},
+    package_data={
+        '':[
+          "LICENSE",
+          "README.md",  
+		],
+		"mvts_analyzer": [
+            "example/*.csv",
+            "example/*.xlsx"
+        ],
+    
 	},
 	install_requires=[ #Generated using pipreqs
 									#Python 3.10		Python 3.8

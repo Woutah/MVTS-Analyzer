@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		settings_dir = settings_path
 		if settings_path is not None:
 			settings_dir = os.path.dirname(settings_path)
-		if settings_path is None or not os.path.exists(settings_dir):
+		if settings_path is None or not os.path.exists(settings_dir): #type: ignore
 			log.info("Loading/Saving settings from/to default location")
 			self._settings = QtCore.QSettings("MVTS-Tools", "MVTS-Analyzer")
 		else:
