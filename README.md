@@ -12,6 +12,7 @@ MVTS-Analyzer is an open-source Python app/package for plotting, analyzing and a
 	- [Python Code](#python-code)
 	- [Supported formats](#supported-formats)
 	- [And more!](#and-more)
+- [Future and Contributing](#future-and-contributing)
 - [Installation](#installation)
 	- [GitHub](#github)
 	- [PyPi](#pypi)
@@ -35,7 +36,7 @@ What data to plot is also controlled using the side-window with the plot-setting
 
 ## Datapoint Selection and Annotation
 
-We can use domain, lasso- and rectangle-selection methods to select and annotate data. The user can select new datapoints either complementary, subtractively or additively. Selected datapoints are highlighted in the plot and can be hidden/shown and annotated.
+We can use domain (Right Mouse Button), lasso- (LMB) and rectangle-selection (MMB) methods to select and annotate data. The user can select new datapoints either complementary, subtractively or additively. Selected datapoints are highlighted in the plot and can be hidden/shown and annotated.
 <p align="center">
 	<img src="https://raw.githubusercontent.com/Woutah/MVTS-Analyzer/main//mvts_analyzer/example/images/app_selection_example.png"/>
 </p>
@@ -60,7 +61,7 @@ Several example-scripts (e.g. data normalization) are included and can be found 
 ## Supported formats
 
 MVTS-Analyzer supports ```CSV```, ```XLSX``` and ```Pandas-dataframe-pickle``` files. The app will automatically detect the file-format and load the data accordingly.
-The only requirement for the data is that it contains a ```DateTime``` column, formatted as ```YYYY-MM-DD HH:MM:SS``` or ```YYYY-MM-DD HH:MM:SS.ffffff```. The app will automatically detect the column containing the DateTime data.
+The only requirement for the data is that it contains a ```DateTime``` column, formatted as ```YYYY-MM-DD HH:MM:SS``` or ```YYYY-MM-DD HH:MM:SS.ffffff```.
 
 ## And more!
 
@@ -72,13 +73,15 @@ Other features include:
 - Exporting the currently displayed figure 
 - Displaying fft-plots behind the main-plot, pandas columns with numpy arrays are automatically detected
 
+# Future and Contributing
 
+If you have any suggestions, bug-reports or feature-requests, feel free to open an issue or submit a pull-request.
 
 # Installation
 
 ## GitHub
 
-Clone the repository and install the requirements (e.g. using pip):
+Clone the [repository](https://github.com/Woutah/MVTS-Analyzer) and install the requirements (e.g. using pip):
 ```bash
 git clone https://github.com/Woutah/MVTS-Analyzer.git
 cd MVTS-Analyzer
