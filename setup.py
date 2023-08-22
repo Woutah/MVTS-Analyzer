@@ -4,9 +4,9 @@ from setuptools import setup, find_packages
 
 setup(
 	name = "MVTS-Analyzer",
-	version= "0.0.01",
+	version= "0.0.2",
 	packages=find_packages('.'),
-    description=("Annotation and analysis tool for Multivariate Time Series Data"),
+    description=("Plotting, annotation and analysis tools for multivariate time series data"),
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     author="Wouter Stokman",
