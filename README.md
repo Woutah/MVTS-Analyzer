@@ -1,8 +1,6 @@
 <!-- # MVTS-Analyzer -->
 <p align="center">
-	<!-- <img src="https://github.com/Woutah/MVTS-analyzer/main/mvts_analyzer/res/app_banner.png" width="1200" /> -->
-	<!-- <img src="https://raw.githubusercontent.com/Woutah/MVTS-analyzer/first-release/mvts_analyzer/res/app_banner.png" width="1200" /> -->
-	<img src="./mvts_analyzer/res/app_banner.png"/>
+	<img src="https://raw.githubusercontent.com/Woutah/MVTS-Analyzer/main//mvts_analyzer/res/app_banner.png"/>
 </p>
 
 MVTS-Analyzer is an open-source Python app/package for plotting, analyzing and annotating multivariate time series. The app was mainly implemented using [PySide6](https://pypi.org/project/PySide6/), [Pandas](https://pypi.org/project/pandas/) and [Matplotlib](https://pypi.org/project/matplotlib/) and makes it easy to quickly load, display and manipulate multivariate time-series data from a .CSV, .XLSX or pandas-dataframe-pickle file.
@@ -27,26 +25,26 @@ MVTS-Analyzer is an open-source Python app/package for plotting, analyzing and a
 
 We can select what columns/sensors to display using the plot-settings, each sensor gets its own axis on which the data is plotted. All data is normalized to the view to enable visualization of data with widely different scales. Individual axes can be controlled (pan/zoom) by dragging the axis using left- or right mouse button. We can plot label-columns (```pandas-category```/```integer```/```string```) underneath the main-plot to show how the data is annotated (multiple supported).
 <p align="center">
-<img src="./mvts_analyzer/example/images/multi_ax_control_example.gif" width="1200"/>
+<img src="https://raw.githubusercontent.com/Woutah/MVTS-Analyzer/main//mvts_analyzer/example/images/multi_ax_control_example.gif" width="1200"/>
 </p>
 
 What data to plot is also controlled using the side-window with the plot-settings. 
 <p align="center">
-<img src="./mvts_analyzer/example/images/app_settings_example.png" width="500"/>
+<img src="https://raw.githubusercontent.com/Woutah/MVTS-Analyzer/main//mvts_analyzer/example/images/app_settings_example.png" width="500"/>
 </p>
 
 ## Datapoint Selection and Annotation
 
 We can use domain, lasso- and rectangle-selection methods to select and annotate data. The user can select new datapoints either complementary, subtractively or additively. Selected datapoints are highlighted in the plot and can be hidden/shown and annotated.
 <p align="center">
-	<img src="./mvts_analyzer/example/images/app_selection_example.png"/>
+	<img src="https://raw.githubusercontent.com/Woutah/MVTS-Analyzer/main//mvts_analyzer/example/images/app_selection_example.png"/>
 </p>
 
 ## Multiple Views
 
 We can open multiple views and plot the same data in different ways using line- and scatter-plots. Point-selection is shared between views, so we can plot different sensors against each other, and select point in one view to highlight them in the other views. This is useful for example to quickly identify and annotate outliers in the data - or to select certain patterns in the data.
 <p align="center">
-<img src="./mvts_analyzer/example/images/multi_view_selection_example.gif" width="1200"/>
+<img src="https://raw.githubusercontent.com/Woutah/MVTS-Analyzer/main//mvts_analyzer/example/images/multi_view_selection_example.gif" width="1200"/>
 </p>
 
 ## Python Code
@@ -55,7 +53,7 @@ We can run python-scripts to manipulate the loaded Dataframe using the built-in 
 Several example-scripts (e.g. data normalization) are included and can be found under the "Apply"-tab in the main-window. 
 
 <p align="center">
-<img src="./mvts_analyzer/example/images/apply_python_example.png"/>
+<img src="https://raw.githubusercontent.com/Woutah/MVTS-Analyzer/main//mvts_analyzer/example/images/apply_python_example.png"/>
 </p>
 
 
