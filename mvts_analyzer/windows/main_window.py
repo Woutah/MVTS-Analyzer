@@ -33,7 +33,7 @@ class MainWindow(QtWidgets.QMainWindow):
 	def __init__(self,
 			graph_model_args = None,
 			graph_settings_model_args = None,
-			settings_path = r"C:\Users\user\Documents\radial_drilling\MVTS-analyzer\settings.ini",
+			settings_path = None,
 			python_appliables_path = None,
 			**kwargs
 		):
