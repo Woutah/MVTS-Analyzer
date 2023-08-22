@@ -23,7 +23,7 @@ MVTS-Analyzer is an open-source Python app/package for plotting, analyzing and a
 
 ## Display-control
 
-We can select what columns/sensors to display using the plot-settings, each sensor gets its own axis on which the data is plotted. All data is normalized to the view to enable visualization of data with widely different scales. Individual axes can be controlled (pan/zoom) by dragging the axis using left- or right mouse button. We can plot label-columns (```pandas-category```/```integer```/```string```) underneath the main-plot to show how the data is annotated (multiple supported).
+We can select what columns/sensors to display using the plot-settings, each sensor gets its own axis on which the data is plotted. All data is normalized to the view to enable visualization of data with widely different scales. Individual axes can be controlled (pan/zoom) by dragging the axis using left- or right mouse button. We can plot label-columns (```pandas-category```/```integer```/```string```) underneath the main-plot to visualize the annotation for the data-points.
 <p align="center">
 <img src="https://raw.githubusercontent.com/Woutah/MVTS-Analyzer/main//mvts_analyzer/example/images/multi_ax_control_example.gif" width="1200"/>
 </p>
