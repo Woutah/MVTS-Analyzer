@@ -113,7 +113,19 @@ def load_dataframe_using_file_extension(file_source : str):
 			if "Index" in new_df.columns:
 				new_df = new_df.set_index("Index")
 		elif filetype == "csv":
-			new_df = pd.read_csv(file_source, index_col="Index")
+			# First check if ";" occurs more than "," in the first 1000 characters
+			with open(file_source, 'r', encoding='utf-8') as f:
+				content = f.read(1000)
+			if content.count(";") > content.count(","):
+				sep = ";"
+			else:
+				sep = ","
+
+			try: 
+				new_df = pd.read_csv(file_source, index_col="Index", sep=sep) #Try to read with index column
+			except ValueError: #If no index column is found, read without index
+				new_df = pd.read_csv(file_source, sep=sep)
+			
 			#Note that datetime columns are not automatically parsed, so we do that here
 			for col in new_df.columns:
 				#Check if first value is a datetime
