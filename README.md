@@ -60,8 +60,8 @@ Several example-scripts (e.g. data normalization) are included and can be found 
 
 ## Supported formats
 
-MVTS-Analyzer supports ```CSV```, ```XLSX``` and ```Pandas-dataframe-pickle``` files. The app will automatically detect the file-format and load the data accordingly.
-The only requirement for the data is that it contains a ```DateTime``` column, formatted as ```YYYY-MM-DD HH:MM:SS``` or ```YYYY-MM-DD HH:MM:SS.ffffff```.
+MVTS-Analyzer supports ```CSV``` (',' or ';' delimited), ```XLSX``` and ```Pandas-dataframe-pickle``` files. The app will automatically detect the file-format and load the data accordingly. An example of the supported formats can be found under `/mvts_analyzer/example/`.
+For FFT-analyses - a datetime column with the exact name```DateTime``` is required, formatted as ```YYYY-MM-DD HH:MM:SS``` or ```YYYY-MM-DD HH:MM:SS.ffffff```.
 
 ## And more!
 
