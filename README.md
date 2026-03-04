@@ -134,6 +134,33 @@ We can use the ```--help``` option to see what options are available:
 | ```-d``` or ```--dark_mode``` | - | Enables dark mode for the app|
 | ```--default_plot_list``` | LIST[STR] | List of columns that we want to try to add to the plot-list when loading new dataframes |
 
+## Loading Dataframes
+
+We can also launch the app with a dataframe directly. For example:
+
+``` python
+import sys
+from PySide6 import QtGui, QtWidgets
+from mvts_analyzer.windows.main_window import MainWindow
+import numpy as np
+import pandas as pd
+import datetime
+
+if __name__ == "__main__":
+	timestamps = pd.date_range("2024-01-01 00:00:00", periods=50, freq=datetime.timedelta(seconds=5)) 
+	data = { 
+		"sensor_A": np.random.normal(loc=20, scale=2, size=50),
+		"sensor_B": np.random.normal(loc=50, scale=5, size=50),
+		"sensor_C": np.random.normal(loc=100, scale=10, size=50),
+	}
+	new_df : pd.DataFrame = pd.DataFrame(data)
+	app = QtWidgets.QApplication(sys.argv)
+	main_win = MainWindow()
+	main_win.graph_data_model.load_existing_df(new_df)
+	main_win.show()
+	app.exec_()
+```
+
 
 ## Tested on
 - Windows 11 - Python 3.10.8
