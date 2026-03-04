@@ -483,14 +483,14 @@ class GraphData(QtCore.QObject):
 			success, msg, new_df = df_utility.load_dataframe_using_file_extension(file_source=file_source)
 			# new_df = pd.read_pickle(file_source)
 
-			if not success:
+			if not success or new_df is None:
 				raise ValueError(msg)
 			elif not self.validate_df(new_df, inplace_try_fix=True) or new_df is None:
 				raise ValueError("Dataframe compatibility error - returning...")
 
 			self._df = new_df
 
-			log.info(f"Succesfully (re)loaded database from file - df size: {len(new_df)}, columns: {new_df.columns}")
+			log.info(f"Succesfully (re)loaded database from file - df size: {len(new_df)}, columns: {new_df.columns} of types {new_df.dtypes}")
 			self._df_selection = set([]) #Reset selection
 			self._file_source = file_source
 			self.fileSourceChanged.emit(self.file_source)

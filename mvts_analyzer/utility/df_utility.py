@@ -100,7 +100,7 @@ def save_dataframe(dataframe : pd.DataFrame, save_path : str, locs=None):
 	log.info(msg)
 	return True, msg
 
-def load_dataframe_using_file_extension(file_source : str):
+def load_dataframe_using_file_extension(file_source : str) -> typing.Tuple[bool, str, typing.Optional[pd.DataFrame]]:
 	"""
 	Load a dataframe from file, using the file extension to determine the filetype
 	"""

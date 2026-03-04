@@ -49,6 +49,8 @@ from mvts_analyzer.utility.gui_utility import (
 
 log = logging.getLogger(__name__)
 
+DATETIME_COLUMN="DateTime"
+
 class PlotError(Exception):
 	"""Exception raised when plotting fails"""
 
@@ -499,7 +501,7 @@ class QPlotter(QtWidgets.QWidget):
 		"""Function used for plotting colorbar, indicating the class for each time-period
 
 		Args:
-			df (pd.DataFrame): Pandas dataframe containing at least a "DateTime" column and a column indicating a class
+			df (pd.DataFrame): Pandas dataframe containing at least 1 x-axis-plottable column (E.g. "DateTime") and a column indicating a class
 			color_column (str, optional): The color-class column, each unique entry in this column will be plotted as
 				a separate color. Defaults to "Prediction".
 			legend_name_dict (dict, optional): Dictionary with translations for each class for the legend, e.g.:
@@ -507,6 +509,10 @@ class QPlotter(QtWidgets.QWidget):
 				will be "Class1" and "Class2" instead of 1&2.
 			Defaults to {}.
 		"""
+
+		lbl_index_column = self.settings_model.x_axis #The column relative to which the labels are attached (normally "DateTime")
+
+
 		before= time.perf_counter()
 		label_columns = self.settings_model.plotted_labels_list #Get list of plotted label-columns
 		log.debug(f"Label columns: {label_columns}")
@@ -516,7 +522,7 @@ class QPlotter(QtWidgets.QWidget):
 
 		all_classes = set({})
 		before1= time.perf_counter()
-		dt_lbl_df = self.selected_data[["DateTime", *label_columns]].sort_values("DateTime", ascending=True)
+		dt_lbl_df = self.selected_data[[lbl_index_column, *label_columns]].sort_values(lbl_index_column, ascending=True)
 		dt_lbl_df.fillna(np.nan) #To make sure <nans> are processed properly
 		if len(dt_lbl_df) == 0:
 			log.info("Not plotting colorbar as length of dataframe is 0")
@@ -555,7 +561,7 @@ class QPlotter(QtWidgets.QWidget):
 		for ax, label_col in zip(axes, label_columns): #Go over label columns #pylint: disable=invalid-name
 			log.debug(f"Now plotting colorbar for column '{label_col}'")
 			before1= time.perf_counter()
-			dt_lbl_original = dt_lbl_df[["DateTime", label_col]].copy() #.to_numpy() #Should already be sorted
+			dt_lbl_original = dt_lbl_df[[lbl_index_column, label_col]].copy() #.to_numpy() #Should already be sorted
 				#descending, as such this should be more efficient
 				# TODO: make sure this stays this way - als: na_value can be used instead of fillna earlier
 			dt_lbl = dt_lbl_original.copy()
@@ -578,7 +584,7 @@ class QPlotter(QtWidgets.QWidget):
 			log.debug(f"Unique values in label column {label_col} : {dt_lbl[label_col].unique()}")
 
 
-			x_bars = dt_lbl["DateTime"].to_numpy()
+			x_bars = dt_lbl[lbl_index_column].to_numpy()
 			z_bars = dt_lbl[label_col].astype("int64").to_numpy() #Added 20221021 -> every class (including None =0 )should
 				#be an integer now -> make sure interpreted as such
 			log.debug(f"Calculating least squares pcolormesh for {label_col} took : {time.perf_counter() - before1}")
@@ -635,7 +641,7 @@ class QPlotter(QtWidgets.QWidget):
 			# 		annot=annot: on_axis_hover(x, ax, original_labels, original_dts, annot)
 			# )
 			# self.canvas.mpl_connect("axes_leave_event", lambda x, annot=annot: on_axis_leave(x, annot))
-			ax.format_coord = (lambda x,y, original_labels=dt_lbl_original[label_col], original_dts=dt_lbl_original['DateTime']:
+			ax.format_coord = (lambda x,y, original_labels=dt_lbl_original[label_col], original_dts=dt_lbl_original[lbl_index_column]:
 				format_coord(x,y, original_labels=original_labels, original_dts=original_dts )) #pylint: disable=cell-var-from-loop
 
 			# annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
@@ -883,11 +889,12 @@ class QPlotter(QtWidgets.QWidget):
 			else:
 
 				#========== Set color for points far from eachother =========
-				dts = self.selected_data["DateTime"].to_numpy()[nan_mask] #TODO: "DateTime is hardcoded here"
-				dt_distances = (dts[:-1] - dts[1:]) / np.timedelta64(1, 's')
-				dt_distances_mask = dt_distances > 100 #If more than 100 seconds
-				#Select data colors => skip last value => all where threshold is true => set alpha (-1) to 0.1
-				self.data_colors[-1][:-1][dt_distances_mask] = self.data_colors[-1][:-1][dt_distances_mask] * [1, 1, 1, 0.1]
+				if (DATETIME_COLUMN in self.selected_data.columns):
+					dts = self.selected_data[DATETIME_COLUMN].to_numpy()[nan_mask] #TODO: "DateTime is hardcoded here"
+					dt_distances = (dts[:-1] - dts[1:]) / np.timedelta64(1, 's')
+					dt_distances_mask = dt_distances > 100 #If more than 100 seconds
+					#Select data colors => skip last value => all where threshold is true => set alpha (-1) to 0.1
+					self.data_colors[-1][:-1][dt_distances_mask] = self.data_colors[-1][:-1][dt_distances_mask] * [1, 1, 1, 0.1]
 
 				#===============0.298 lineplot ====================
 				line_starts = np.expand_dims(np.vstack((x_vals[:-1], y_vals[:-1])), axis=1)
@@ -1060,8 +1067,8 @@ class QPlotter(QtWidgets.QWidget):
 
 		if self.settings_model.fft_toggle: #if fft is toggled on
 			if self.settings_model.x_axis != "DateTime": #TODO: do not hardcode "Datetime"? Maybe check pd.type
-				create_qt_warningbox("Warning: could not plot fft diagram because X-axis is not Datetime - Pleas turn "
-			 		"off FFT or select DateTime for x-axis and replot")
+				create_qt_warningbox("Warning: could not plot fft diagram because X-axis is not 'Datetime' - Pleas turn "
+			 		"off FFT or select DateTime for x-axis and replot (name must match case)")
 			else:
 				self._reload_fft_data()
 				self._replot_fft()
